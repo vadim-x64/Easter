@@ -269,7 +269,14 @@ function createBasket() {
         this.src = 'https://cdn-icons-png.flaticon.com/128/2913/2913133.png';
     };
 
+    // 🔥 НОВИЙ КОНТЕЙНЕР для предметів
+    const itemsContainer = document.createElement('div');
+    itemsContainer.className = 'basket-items-container';
+    itemsContainer.id = 'basket-items-container';
+
     basket.appendChild(img);
+    basket.appendChild(itemsContainer); // Додаємо контейнер
+
     return basket;
 }
 
@@ -487,7 +494,7 @@ function checkBasketProximity(x, y) {
         Math.pow(itemCenterY - basketCenterY, 2)
     );
 
-    if (distance < 150) {
+    if (distance < 180) {
         basket.classList.add('lift');
 
         if (itemCenterX < basketCenterX) {
@@ -513,42 +520,67 @@ function isOverBasket(x, y) {
         Math.pow(y - basketCenterY, 2)
     );
 
-    return distance < 100;
+    return distance < 130; // 🔥 Збільшено з 100 до 130
 }
 
-// 🔥 УЛУЧШЕНО: анимация сбора с учётом base rotation
 function collectItem(element) {
     const basket = document.getElementById('basket');
-    const basketRect = basket.getBoundingClientRect();
+    const itemsContainer = document.getElementById('basket-items-container');
+    const containerRect = itemsContainer.getBoundingClientRect();
 
-    // 🔊 Звук попадания
     playDropSound();
 
     element.classList.add('collected');
+    element.classList.add('basket-item-inside');
 
-    element.style.left = (basketRect.left + basketRect.width / 2 - 40) + 'px';
-    element.style.top = (basketRect.top + basketRect.height / 2 - 20) + 'px';
+    // 🔥 КРАЩЕ РОЗМІЩЕННЯ: більш природний розкид по кошику
+    const containerWidth = containerRect.width;
+    const containerHeight = containerRect.height;
 
+    // Використовуємо полярні координати для рівномірного розподілу
+    const angle = Math.random() * Math.PI * 2; // Випадковий кут 0-360°
+    const radius = Math.random() * Math.min(containerWidth, containerHeight) * 0.35; // До 35% радіуса
+
+    const randomX = Math.cos(angle) * radius;
+    const randomY = Math.sin(angle) * radius;
+
+    // Додаємо невеликий вертикальний стек-ефект
+    const stackOffset = Math.min(collectedCount * 4, containerHeight * 0.2);
+    const finalY = randomY - stackOffset + (Math.random() - 0.5) * 10;
+
+    // Зберігаємо початковий нахил
     const baseRot = parseFloat(element.dataset.baseRotation) || 0;
-    element.style.transform = `scale(0.5) rotate(${baseRot + 360}deg)`;
-    element.style.opacity = '0.8';
+    const tinyTilt = (Math.random() - 0.5) * 30; // Збільшено варіацію нахилу
+    const finalRotation = baseRot + tinyTilt;
+
+    // Варіація розміру для природності
+    const scale = 0.5 + Math.random() * 0.15; // 0.5-0.65
+
+    // 🔥 ПЕРЕНОСИМО предмет В КОНТЕЙНЕР
+    element.style.left = '50%';
+    element.style.top = '50%';
+    element.style.transform = `translate(calc(-50% + ${randomX}px), calc(-50% + ${finalY}px)) scale(${scale}) rotate(${finalRotation}deg)`;
+    element.style.opacity = '0.95';
     element.style.zIndex = '8';
+    element.style.filter = 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25))';
+    element.style.pointerEvents = 'none';
 
-    createConfetti(basketRect.left + basketRect.width / 2, basketRect.top + basketRect.height / 2);
+    // Додаємо В КОНТЕЙНЕР
+    itemsContainer.appendChild(element);
 
-    setTimeout(() => {
-        element.style.display = 'none';
-        collectedCount++;
-        updateProgress();
+    const basketCenterX = containerRect.left + containerRect.width / 2;
+    const basketCenterY = containerRect.top + containerRect.height / 2;
+    createConfetti(basketCenterX, basketCenterY);
 
-        if (collectedCount === totalItems) {
-            // 🔊 Звук завершения
-            playCompleteSound();
-            setTimeout(() => {
-                showWishes();
-            }, 500);
-        }
-    }, 600);
+    collectedCount++;
+    updateProgress();
+
+    if (collectedCount === totalItems) {
+        playCompleteSound();
+        setTimeout(() => {
+            showWishes();
+        }, 1000);
+    }
 }
 
 function createConfetti(x, y) {

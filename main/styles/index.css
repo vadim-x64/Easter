@@ -91,10 +91,9 @@ body.show-content > :not(.site-grid) {
     z-index: 1;
 }
 
-/* Корзинка */
 .basket {
     position: absolute;
-    bottom: 0;
+    bottom: -45px; /* 🔥 Повертаємо на 0, але предмети будуть всередині */
     left: 50%;
     transform: translate(-50%, 0);
     width: 300px;
@@ -103,25 +102,70 @@ body.show-content > :not(.site-grid) {
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     pointer-events: none;
 
+
 }
+
+
 
 .basket img {
-    width: 100%;
+    width: auto;
     height: 100%;
-    object-fit: cover;
-
+    object-fit: cover; /* 🔥 Важливо: щоб кошик був повністю видимий */
 }
 
+.basket-item-inside {
+    position: absolute !important;
+    pointer-events: none !important;
+    z-index: 7 !important;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    /* Центруємо відносно контейнера */
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+@keyframes basket-highlight {
+    0% {
+        filter: brightness(1);
+    }
+    50% {
+        filter: brightness(1.2);
+    }
+    100% {
+        filter: brightness(1);
+    }
+}
+
+.basket-items-container {
+    position: absolute;
+    bottom: 35%; /* Центр кошика */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%; /* Менша зона ніж кошик */
+    height: 40%;
+    pointer-events: none;
+    z-index: -1;
+    transform-origin: center bottom; /* Гойдання від низу */
+}
+
+/* Оновлюємо .basket щоб контейнер гойдався разом */
+.basket.tilt-left .basket-items-container {
+    transform: translateX(-50%) rotate(-10deg);
+}
+
+.basket.tilt-right .basket-items-container {
+    transform: translateX(-50%) rotate(10deg);
+}
 .basket.lift {
-    transform: translate(-50%, -10%);
+    transform: translate(-50%, -5%);
 }
 
 .basket.tilt-left {
-    transform: translate(-50%, -10%) rotate(-10deg);
+    transform: translate(-50%, -5%) rotate(-10deg);
 }
 
 .basket.tilt-right {
-    transform: translate(-50%, -10%) rotate(10deg);
+    transform: translate(-50%, -5%) rotate(10deg);
 }
 
 /* Предмети для збирання */
@@ -157,8 +201,49 @@ body.show-content > :not(.site-grid) {
 }
 
 .draggable-item.collected {
-    transition: all 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
     z-index: 8;
+    pointer-events: none;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.2s ease-out !important; /* 🔥 Додано окремий transition для transform */
+    animation: drop-and-settle 0.8s ease-out forwards !important;
+}
+@keyframes drop-and-settle {
+    0% {
+        transform: scale(1) ;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+    }
+    50% {
+        transform: scale(0.7) ;
+        filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.25));
+    }
+    100% {
+        transform: scale(var(--final-scale, 0.5)) ;
+        filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.3));
+    }
+}
+
+@keyframes bounce-in-basket {
+    0% {
+        transform: scale(1) translateY(0);
+    }
+    50% {
+        transform: scale(0.9) translateY(-10px);
+    }
+    100% {
+        transform: scale(var(--final-scale, 0.5)) rotate(var(--final-rotation, 180deg));
+    }
+}
+
+
+@keyframes basket-shake {
+    0%, 100% { transform: translate(-50%, 0); }
+    25% { transform: translate(-50%, -2px) rotate(-1deg); }
+    75% { transform: translate(-50%, -2px) rotate(1deg); }
+}
+
+.basket:has(+ .draggable-item.collected) {
+    animation: basket-highlight 0.4s ease;
 }
 
 /* Прогрес-бар */
@@ -241,8 +326,8 @@ body.show-content > :not(.site-grid) {
     margin-bottom: 30px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
     opacity: 0;
-    transform: translateY(10px);
-    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: translateY(100px);
+    transition: opacity 3s ease, transform 3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .special-message.show {
@@ -285,6 +370,7 @@ body.show-content > :not(.site-grid) {
     .basket {
         width: 120px;
         height: 120px;
+        bottom: 0;
     }
 
     .draggable-item {
@@ -331,8 +417,3 @@ body.show-content > :not(.site-grid) {
     }
 }
 
-/* Покращена анімація збору предмета */
-.draggable-item.collected {
-    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    z-index: 8;
-}
