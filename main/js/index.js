@@ -387,16 +387,27 @@ function createDraggableItems(container) {
     const centerY = H / 2;
     const isMobile = W <= 768;
 
-    const excludeRadius = isMobile ? 280 : 350;
-    const topMargin = 0;
-    const bottomMargin = 0;
-    const edgeMargin = isMobile ? 40 : 0;
+    // Зона виключення для кошика (внизу по центру)
+    const basketExcludeZone = {
+        x: centerX - 200,
+        y: H - 350,
+        width: 400,
+        height: 350
+    };
 
-    const minDist = isMobile ? 100 : 120;
+    // Зона виключення для прогрес-бару (вгорі по центру)
+    const progressExcludeZone = {
+        x: centerX - 200,
+        y: 0,
+        width: 400,
+        height: 150
+    };
+
+    const edgeMargin = isMobile ? 40 : 20;
+    const minDist = isMobile ? 80 : 100;
 
     const positions = [];
 
-    // Обмежуємо до 10 унікальних предметів і подвоюємо їх
     const maxUniqueItems = 16;
     const limitedItems = items.slice(0, maxUniqueItems);
 
@@ -404,10 +415,8 @@ function createDraggableItems(container) {
     limitedItems.forEach(item => {
         allItems.push({...item, copyIndex: 1});
         allItems.push({...item, copyIndex: 2});
-
     });
 
-    // Оновлюємо загальну кількість (буде 20)
     totalItems = allItems.length;
 
     allItems.forEach((item, index) => {
@@ -423,7 +432,6 @@ function createDraggableItems(container) {
         };
         itemElement.appendChild(img);
 
-        // Варіації в розмірах
         let sizeVariation;
         const sizeRandom = Math.random();
         if (sizeRandom < 0.3) {
@@ -444,34 +452,50 @@ function createDraggableItems(container) {
         let x, y;
         let placed = false;
         let attempts = 0;
-        const maxAttempts = 800;
+        const maxAttempts = 1000;
 
-        // Максимальні межі для позиціонування (з урахуванням розміру предмета)
         const maxX = W - sizeVariation - edgeMargin;
-        const maxY = H - sizeVariation - bottomMargin;
+        const maxY = H - sizeVariation - edgeMargin;
         const minX = edgeMargin;
-        const minY = topMargin;
+        const minY = edgeMargin;
+
+        function isInExcludeZone(x, y, size) {
+            // Перевірка зони кошика
+            if (x + size > basketExcludeZone.x &&
+                x < basketExcludeZone.x + basketExcludeZone.width &&
+                y + size > basketExcludeZone.y &&
+                y < basketExcludeZone.y + basketExcludeZone.height) {
+                return true;
+            }
+
+            // Перевірка зони прогрес-бару
+            if (x + size > progressExcludeZone.x &&
+                x < progressExcludeZone.x + progressExcludeZone.width &&
+                y + size > progressExcludeZone.y &&
+                y < progressExcludeZone.y + progressExcludeZone.height) {
+                return true;
+            }
+
+            return false;
+        }
 
         while (!placed && attempts < maxAttempts) {
-            // Генеруємо випадкову позицію в межах екрану
             x = minX + Math.random() * (maxX - minX);
             y = minY + Math.random() * (maxY - minY);
 
-            // Перевіряємо, що предмет не виходить за межі
             if (x < minX || x > maxX || y < minY || y > maxY) {
+                attempts++;
+                continue;
+            }
+
+            // Перевірка виключених зон
+            if (isInExcludeZone(x, y, sizeVariation)) {
                 attempts++;
                 continue;
             }
 
             const cx = x + sizeVariation / 2;
             const cy = y + sizeVariation / 2;
-
-            // Перевірка відстані від центру (кошика)
-            const distCenter = Math.sqrt((cx - centerX) ** 2 + (cy - centerY) ** 2);
-            if (distCenter < excludeRadius) {
-                attempts++;
-                continue;
-            }
 
             // Перевірка перекриття з іншими предметами
             let tooClose = false;
@@ -492,29 +516,27 @@ function createDraggableItems(container) {
             placed = true;
         }
 
-        // Якщо не вдалося знайти місце після багатьох спроб
         if (!placed) {
+            // Аварійний режим з меншою дистанцією
             let emergencyAttempts = 0;
-            const reducedMinDist = minDist * 0.5;
+            const reducedMinDist = minDist * 0.4;
 
-            while (!placed && emergencyAttempts < 300) {
+            while (!placed && emergencyAttempts < 500) {
                 x = minX + Math.random() * (maxX - minX);
                 y = minY + Math.random() * (maxY - minY);
 
-                // Перевіряємо межі
                 if (x < minX || x > maxX || y < minY || y > maxY) {
+                    emergencyAttempts++;
+                    continue;
+                }
+
+                if (isInExcludeZone(x, y, sizeVariation)) {
                     emergencyAttempts++;
                     continue;
                 }
 
                 const cx = x + sizeVariation / 2;
                 const cy = y + sizeVariation / 2;
-                const distCenter = Math.sqrt((cx - centerX) ** 2 + (cy - centerY) ** 2);
-
-                if (distCenter < excludeRadius) {
-                    emergencyAttempts++;
-                    continue;
-                }
 
                 let tooClose = false;
                 for (const pos of positions) {
@@ -533,7 +555,6 @@ function createDraggableItems(container) {
             }
         }
 
-        // Фінальна перевірка і корекція позиції
         x = Math.max(minX, Math.min(x, maxX));
         y = Math.max(minY, Math.min(y, maxY));
 
@@ -548,7 +569,6 @@ function createDraggableItems(container) {
         container.appendChild(itemElement);
     });
 
-    // Оновлюємо прогрес
     updateProgress();
 }
 
@@ -662,18 +682,27 @@ function collectItem(element) {
 
     playDropSound();
 
-    element.classList.add('collected');
-    element.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    // Отримуємо позицію предмета перед видаленням
+    const rect = element.getBoundingClientRect();
+    const itemCenterX = rect.left + rect.width / 2;
+    const itemCenterY = rect.top + rect.height / 2;
+
+    // Створюємо ефект розпаду на шарики
+    createDissolveEffect(itemCenterX, itemCenterY, element);
+
+    // Видаляємо предмет з невеликою затримкою
+    element.style.transition = 'opacity 0.3s ease';
     element.style.opacity = '0';
-    element.style.transform = 'scale(0.5)';
 
     setTimeout(() => {
         element.remove();
-    }, 500);
+    }, 300);
 
     const basketRect = basket.getBoundingClientRect();
     const basketCenterX = basketRect.left + basketRect.width / 2;
     const basketCenterY = basketRect.top + basketRect.height / 2;
+
+    // Додаємо звичайне конфетті
     createConfetti(basketCenterX, basketCenterY);
 
     collectedCount++;
@@ -690,6 +719,91 @@ function collectItem(element) {
     }
 }
 
+function createDissolveEffect(x, y, element) {
+    const isMobile = window.innerWidth <= 768;
+    const particleCount = isMobile ? 15 : 25;
+
+    // Отримуємо колір з елемента (беремо основний колір картинки)
+    const colors = [
+        '#FFD700', '#FFA500', '#FF6B6B', '#FF69B4',
+        '#9370DB', '#87CEEB', '#4CAF50', '#FF9800',
+        '#E91E63', '#00BCD4', '#FFEB3B', '#8BC34A'
+    ];
+
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'dissolve-particle';
+
+        const size = 8 + Math.random() * 12;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+
+        particle.style.cssText = `
+            position: fixed;
+            left: ${x}px;
+            top: ${y}px;
+            width: ${size}px;
+            height: ${size}px;
+            background: ${color};
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 999;
+            box-shadow: 0 0 ${size * 2}px ${color}80, 
+                        0 0 ${size}px ${color};
+        `;
+
+        const angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.5;
+        const velocity = 80 + Math.random() * 120;
+        const tx = Math.cos(angle) * velocity;
+        const ty = Math.sin(angle) * velocity;
+
+        const duration = 0.8 + Math.random() * 0.4;
+
+        particle.style.setProperty('--tx', tx + 'px');
+        particle.style.setProperty('--ty', ty + 'px');
+        particle.style.animation = `dissolve-burst ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`;
+
+        document.body.appendChild(particle);
+
+        setTimeout(() => particle.remove(), duration * 1000);
+    }
+
+    // Додаємо другу хвилю менших часточок для більшої густини
+    setTimeout(() => {
+        for (let i = 0; i < particleCount / 2; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'dissolve-particle-small';
+
+            const size = 4 + Math.random() * 6;
+            const color = colors[Math.floor(Math.random() * colors.length)];
+
+            particle.style.cssText = `
+                position: fixed;
+                left: ${x}px;
+                top: ${y}px;
+                width: ${size}px;
+                height: ${size}px;
+                background: ${color};
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 998;
+                box-shadow: 0 0 ${size * 3}px ${color};
+            `;
+
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = 40 + Math.random() * 80;
+            const tx = Math.cos(angle) * velocity;
+            const ty = Math.sin(angle) * velocity;
+
+            particle.style.setProperty('--tx', tx + 'px');
+            particle.style.setProperty('--ty', ty + 'px');
+            particle.style.animation = `dissolve-burst 1s ease-out forwards`;
+
+            document.body.appendChild(particle);
+
+            setTimeout(() => particle.remove(), 1000);
+        }
+    }, 100);
+}
 function updateBasketImage(img) {
     let level = 0;
     if (collectedCount >= 9) level = 3;
