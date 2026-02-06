@@ -1,16 +1,21 @@
 // Конфігурація гри
 const gameConfig = {
     items: [
-        { id: 1, name: 'bunny', src: 'main/assets/items/bunny.png' },
-        { id: 2, name: 'egg1', src: 'main/assets/items/egg1.png' },
-        { id: 3, name: 'egg2', src: 'main/assets/items/egg2.png' },
-        { id: 4, name: 'egg3', src: 'main/assets/items/egg3.png' },
-        { id: 5, name: 'cake', src: 'main/assets/items/cake.png' },
-        { id: 6, name: 'flower', src: 'main/assets/items/flower.png' },
-        { id: 7, name: 'chicken', src: 'main/assets/items/chicken.png' },
-        { id: 8, name: 'basket-item', src: 'main/assets/items/box.png' }
+        {id: 1, name: 'bunny', src: 'main/assets/items/bunny.png'},
+        {id: 2, name: 'egg1', src: 'main/assets/items/egg1.png'},
+        {id: 3, name: 'egg2', src: 'main/assets/items/egg2.png'},
+        {id: 4, name: 'egg3', src: 'main/assets/items/egg3.png'},
+        {id: 5, name: 'cake', src: 'main/assets/items/cake.png'},
+        {id: 6, name: 'flower', src: 'main/assets/items/flower.png'},
+        {id: 7, name: 'chicken', src: 'main/assets/items/chicken.png'},
+        {id: 8, name: 'basket-item', src: 'main/assets/items/box.png'}
     ],
-    basketSrc: 'main/assets/box.png',
+    basketSrcs: [  // Новий array для рівнів кошика
+        'main/assets/box.png',  // 0 предметів
+        'main/assets/box_low.png',    // 1-3
+        'main/assets/box_medium.png', // 4-6
+        'main/assets/box_full.png'    // 7-8
+    ],
     celebrationIcons: [
         "https://cdn-icons-png.flaticon.com/128/2545/2545534.png",
         "https://cdn-icons-png.flaticon.com/128/2720/2720077.png",
@@ -209,7 +214,7 @@ async function initializeGame() {
 
     const loading = document.createElement('div');
     loading.className = 'loading';
-    loading.textContent = 'Завантаженн...';
+    loading.textContent = 'Завантаження...';
     main.appendChild(loading);
 
     await loadWishes();
@@ -249,7 +254,7 @@ function createVideoBackground() {
     video.appendChild(source);
     videoBackground.appendChild(video);
 
-    video.addEventListener('error', function() {
+    video.addEventListener('error', function () {
         videoBackground.style.background = 'linear-gradient(135deg, #E8F5E9 0%, #FFF9C4 50%, #FFE0B2 100%)';
         video.style.display = 'none';
     });
@@ -263,19 +268,12 @@ function createBasket() {
     basket.id = 'basket';
 
     const img = document.createElement('img');
-    img.src = gameConfig.basketSrc;
+    img.src = gameConfig.basketSrcs[0];  // Початково порожній кошик
     img.alt = 'Корзинка';
-    img.onerror = function() {
+    img.onerror = function () {
         this.src = 'https://cdn-icons-png.flaticon.com/128/2913/2913133.png';
     };
-
-    // 🔥 НОВИЙ КОНТЕЙНЕР для предметів
-    const itemsContainer = document.createElement('div');
-    itemsContainer.className = 'basket-items-container';
-    itemsContainer.id = 'basket-items-container';
-
     basket.appendChild(img);
-    basket.appendChild(itemsContainer); // Додаємо контейнер
 
     return basket;
 }
@@ -319,17 +317,37 @@ function createDraggableItems(container) {
     // Покращені зони розміщення
     const zones = [
         // Верхня ліва
-        { x1: edgeMargin, y1: topMargin, x2: centerX - excludeRadius - 60, y2: centerY - excludeRadius - 40 },
+        {x1: edgeMargin, y1: topMargin, x2: centerX - excludeRadius - 60, y2: centerY - excludeRadius - 40},
         // Верхня права
-        { x1: centerX + excludeRadius + 60, y1: topMargin, x2: W - edgeMargin - itemSize, y2: centerY - excludeRadius - 40 },
+        {
+            x1: centerX + excludeRadius + 60,
+            y1: topMargin,
+            x2: W - edgeMargin - itemSize,
+            y2: centerY - excludeRadius - 40
+        },
         // Ліва середня
-        { x1: edgeMargin, y1: centerY - excludeRadius - 20, x2: centerX - excludeRadius - 50, y2: centerY + excludeRadius + 20 },
+        {
+            x1: edgeMargin,
+            y1: centerY - excludeRadius - 20,
+            x2: centerX - excludeRadius - 50,
+            y2: centerY + excludeRadius + 20
+        },
         // Права середня
-        { x1: centerX + excludeRadius + 50, y1: centerY - excludeRadius - 20, x2: W - edgeMargin - itemSize, y2: centerY + excludeRadius + 20 },
+        {
+            x1: centerX + excludeRadius + 50,
+            y1: centerY - excludeRadius - 20,
+            x2: W - edgeMargin - itemSize,
+            y2: centerY + excludeRadius + 20
+        },
         // Нижня ліва
-        { x1: edgeMargin, y1: centerY + excludeRadius + 40, x2: centerX - 80, y2: H - edgeMargin - itemSize },
+        {x1: edgeMargin, y1: centerY + excludeRadius + 40, x2: centerX - 80, y2: H - edgeMargin - itemSize},
         // Нижня права
-        { x1: centerX + 80, y1: centerY + excludeRadius + 40, x2: W - edgeMargin - itemSize, y2: H - edgeMargin - itemSize }
+        {
+            x1: centerX + 80,
+            y1: centerY + excludeRadius + 40,
+            x2: W - edgeMargin - itemSize,
+            y2: H - edgeMargin - itemSize
+        }
     ];
 
     const positions = [];
@@ -344,7 +362,7 @@ function createDraggableItems(container) {
         const img = document.createElement('img');
         img.src = item.src;
         img.alt = item.name;
-        img.onerror = function() {
+        img.onerror = function () {
             this.src = gameConfig.celebrationIcons[index % gameConfig.celebrationIcons.length];
         };
         itemElement.appendChild(img);
@@ -401,7 +419,7 @@ function createDraggableItems(container) {
             y = Math.random() * (H - itemSize - 160) + 140;
         }
 
-        positions.push({ cx: x + itemSize / 2, cy: y + itemSize / 2 });
+        positions.push({cx: x + itemSize / 2, cy: y + itemSize / 2});
 
         itemElement.style.left = x + 'px';
         itemElement.style.top = y + 'px';
@@ -418,8 +436,8 @@ function addDragListeners(element) {
     document.addEventListener('mousemove', drag);
     document.addEventListener('mouseup', endDrag);
 
-    element.addEventListener('touchstart', startDrag, { passive: false });
-    document.addEventListener('touchmove', drag, { passive: false });
+    element.addEventListener('touchstart', startDrag, {passive: false});
+    document.addEventListener('touchmove', drag, {passive: false});
     document.addEventListener('touchend', endDrag);
 }
 
@@ -480,6 +498,16 @@ function endDrag(e) {
     currentDragElement = null;
 }
 
+function isOverBasket(x, y) {
+    const basket = document.getElementById('basket');
+    const rect = basket.getBoundingClientRect();
+    const padding = 50; // Розширена зона для "поля зору" кошика
+    return x >= rect.left - padding &&
+        x <= rect.right + padding &&
+        y >= rect.top - padding &&
+        y <= rect.bottom + padding;
+}
+
 function checkBasketProximity(x, y) {
     const basket = document.getElementById('basket');
     const basketRect = basket.getBoundingClientRect();
@@ -509,71 +537,33 @@ function checkBasketProximity(x, y) {
     }
 }
 
-function isOverBasket(x, y) {
-    const basket = document.getElementById('basket');
-    const basketRect = basket.getBoundingClientRect();
-    const basketCenterX = basketRect.left + basketRect.width / 2;
-    const basketCenterY = basketRect.top + basketRect.height / 2;
-
-    const distance = Math.sqrt(
-        Math.pow(x - basketCenterX, 2) +
-        Math.pow(y - basketCenterY, 2)
-    );
-
-    return distance < 130; // 🔥 Збільшено з 100 до 130
-}
-
 function collectItem(element) {
     const basket = document.getElementById('basket');
-    const itemsContainer = document.getElementById('basket-items-container');
-    const containerRect = itemsContainer.getBoundingClientRect();
+    const basketImg = basket.querySelector('img');
 
     playDropSound();
 
     element.classList.add('collected');
-    element.classList.add('basket-item-inside');
+    // Анімація зникнення предмета (замість додавання в container)
+    element.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    element.style.opacity = '0';
+    element.style.transform = 'scale(0.5)';
 
-    // 🔥 КРАЩЕ РОЗМІЩЕННЯ: більш природний розкид по кошику
-    const containerWidth = containerRect.width;
-    const containerHeight = containerRect.height;
+    setTimeout(() => {
+        element.remove();
+    }, 500);
 
-    // Використовуємо полярні координати для рівномірного розподілу
-    const angle = Math.random() * Math.PI * 2; // Випадковий кут 0-360°
-    const radius = Math.random() * Math.min(containerWidth, containerHeight) * 0.35; // До 35% радіуса
-
-    const randomX = Math.cos(angle) * radius;
-    const randomY = Math.sin(angle) * radius;
-
-    // Додаємо невеликий вертикальний стек-ефект
-    const stackOffset = Math.min(collectedCount * 4, containerHeight * 0.2);
-    const finalY = randomY - stackOffset + (Math.random() - 0.5) * 10;
-
-    // Зберігаємо початковий нахил
-    const baseRot = parseFloat(element.dataset.baseRotation) || 0;
-    const tinyTilt = (Math.random() - 0.5) * 30; // Збільшено варіацію нахилу
-    const finalRotation = baseRot + tinyTilt;
-
-    // Варіація розміру для природності
-    const scale = 0.5 + Math.random() * 0.15; // 0.5-0.65
-
-    // 🔥 ПЕРЕНОСИМО предмет В КОНТЕЙНЕР
-    element.style.left = '50%';
-    element.style.top = '50%';
-    element.style.transform = `translate(calc(-50% + ${randomX}px), calc(-50% + ${finalY}px)) scale(${scale}) rotate(${finalRotation}deg)`;
-    element.style.opacity = '0.95';
-    element.style.zIndex = '8';
-    element.style.filter = 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25))';
-    element.style.pointerEvents = 'none';
-
-    // Додаємо В КОНТЕЙНЕР
-    itemsContainer.appendChild(element);
-
-    const basketCenterX = containerRect.left + containerRect.width / 2;
-    const basketCenterY = containerRect.top + containerRect.height / 2;
+    const basketRect = basket.getBoundingClientRect();
+    const basketCenterX = basketRect.left + basketRect.width / 2;
+    const basketCenterY = basketRect.top + basketRect.height / 2;
     createConfetti(basketCenterX, basketCenterY);
 
     collectedCount++;
     updateProgress();
+    updateBasketImage(basketImg);  // Оновлюємо картинку кошика
+
+    // Повертаємо кошик у звичайне положення після прийняття предмета
+    basket.className = 'basket';
 
     if (collectedCount === totalItems) {
         playCompleteSound();
@@ -581,6 +571,16 @@ function collectItem(element) {
             showWishes();
         }, 1000);
     }
+}
+
+function updateBasketImage(img) {
+    let level = 0;
+    if (collectedCount >= 9) level = 3;
+    else if (collectedCount >= 6) level = 2;
+    else if (collectedCount >= 3) level = 1;
+    else if (collectedCount < 3) level = 0;
+
+    img.src = gameConfig.basketSrcs[level];
 }
 
 function createConfetti(x, y) {
@@ -680,6 +680,7 @@ function showWishes() {
         });
     }, 500);
 }
+
 function showNextWish() {
     const wishText = document.getElementById('wish-text');
     wishText.style.opacity = '0';
@@ -706,6 +707,7 @@ function typeWriter(text, element, speed = 50, onComplete = null) {
             onComplete();
         }
     }
+
     typing();
 }
 
@@ -725,14 +727,14 @@ function createCelebration(count = 80) {
 
     const bursts = actualCount > 20
         ? [
-            { x: 0,  y: H * 0.25 },
-            { x: 0,  y: H * 0.6  },
-            { x: W,  y: H * 0.25 },
-            { x: W,  y: H * 0.6  },
+            {x: 0, y: H * 0.25},
+            {x: 0, y: H * 0.6},
+            {x: W, y: H * 0.25},
+            {x: W, y: H * 0.6},
         ]
         : [
-            { x: 0,  y: H * 0.4 },
-            { x: W,  y: H * 0.4 },
+            {x: 0, y: H * 0.4},
+            {x: W, y: H * 0.4},
         ];
 
     const perBurst = Math.max(4, Math.floor(actualCount / bursts.length));
@@ -749,7 +751,8 @@ function createCelebration(count = 80) {
 
             if (shapeType === 0) {
                 // Круглый
-                w = size; h = size;
+                w = size;
+                h = size;
                 radius = '50%';
             } else if (shapeType === 1) {
                 // Прямоугольник (вытянутый — как настоящий конфетти)
@@ -837,8 +840,8 @@ function createCelebration(count = 80) {
             p.vy += p.gravity;          // гравитация
             p.vx *= p.drag;             // трение по x (замедляет горизонтальный полёт)
             p.vy *= p.drag;             // трение по y (чуть смягчает падение)
-            p.x  += p.vx;
-            p.y  += p.vy;
+            p.x += p.vx;
+            p.y += p.vy;
             p.rotation += p.rotationSpeed;
             p.rotationSpeed *= 0.995;   // ротация тоже постепенно замедляется
             p.life -= p.decay;
@@ -866,7 +869,7 @@ function createCelebration(count = 80) {
     requestAnimationFrame(animate);
 }
 
-document.addEventListener('contextmenu', function(e) {
+document.addEventListener('contextmenu', function (e) {
     if (e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO') {
         e.preventDefault();
     }

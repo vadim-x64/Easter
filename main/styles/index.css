@@ -36,17 +36,17 @@ body {
 
 .site-grid-cell {
     background-color: #FFD700;
-    border-radius: 50%; /* 🔥 Робимо кружечки */
+    border-radius: 50%;
     transform: scale(1);
     opacity: 1;
     transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55),
     opacity 0.6s ease;
     aspect-ratio: 1;
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); /* Світіння */
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
 }
 
 .site-grid-cell.fade-out {
-    transform: scale(0); /* Кружечки стискаються */
+    transform: scale(0);
     opacity: 0;
 }
 
@@ -59,7 +59,6 @@ body.show-content > :not(.site-grid) {
     opacity: 1;
 }
 
-/* Фоновідео */
 .video-background {
     position: fixed;
     top: 0;
@@ -81,7 +80,6 @@ body.show-content > :not(.site-grid) {
     object-fit: cover;
 }
 
-/* Контейнер гри */
 #game-container {
     position: fixed;
     top: 0;
@@ -93,7 +91,7 @@ body.show-content > :not(.site-grid) {
 
 .basket {
     position: absolute;
-    bottom: -45px; /* 🔥 Повертаємо на 0, але предмети будуть всередині */
+    bottom: -45px;
     left: 50%;
     transform: translate(-50%, 0);
     width: 300px;
@@ -101,61 +99,51 @@ body.show-content > :not(.site-grid) {
     z-index: 10;
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     pointer-events: none;
-
-
 }
-
-
 
 .basket img {
     width: auto;
     height: 100%;
-    object-fit: cover; /* 🔥 Важливо: щоб кошик був повністю видимий */
+    object-fit: cover;
+    position: relative; /* Add this to enable z-index */
+    z-index: 7; /* Higher than container's 6, so on top */
 }
 
 .basket-item-inside {
     position: absolute !important;
     pointer-events: none !important;
-    z-index: 7 !important;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-    /* Центруємо відносно контейнера */
-    left: 50% !important;
-    top: 50% !important;
-    transform: translate(-50%, -50%) !important;
+    transition: transform 0.3s ease !important;
 }
 
-@keyframes basket-highlight {
-    0% {
-        filter: brightness(1);
-    }
-    50% {
-        filter: brightness(1.2);
-    }
-    100% {
-        filter: brightness(1);
-    }
-}
+
 
 .basket-items-container {
     position: absolute;
-    bottom: 35%; /* Центр кошика */
+    bottom: 35%; /* Adjusted slightly lower to feel more "inside" the basket */
     left: 50%;
     transform: translateX(-50%);
-    width: 60%; /* Менша зона ніж кошик */
-    height: 40%;
+    width: 70%; /* Wider for better spread (was 55%) */
+    height: 40%; /* Taller to allow vertical piling (was 35%) */
     pointer-events: none;
-    z-index: -1;
-    transform-origin: center bottom; /* Гойдання від низу */
+    z-index: 6; /* Still under the basket img */
+    transform-origin: center bottom;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden; /* Optional: clip items if they poke out */
 }
 
-/* Оновлюємо .basket щоб контейнер гойдався разом */
+/* Гойдання разом з кошиком */
+.basket.lift .basket-items-container {
+    transform: translateX(-50%) translateY(-5%);
+}
+
 .basket.tilt-left .basket-items-container {
-    transform: translateX(-50%) rotate(-10deg);
+    transform: translateX(-50%) translateY(-5%) rotate(-10deg);
 }
 
 .basket.tilt-right .basket-items-container {
-    transform: translateX(-50%) rotate(10deg);
+    transform: translateX(-50%) translateY(-5%) rotate(10deg);
 }
+
 .basket.lift {
     transform: translate(-50%, -5%);
 }
@@ -168,7 +156,19 @@ body.show-content > :not(.site-grid) {
     transform: translate(-50%, -5%) rotate(10deg);
 }
 
-/* Предмети для збирання */
+
+
+@keyframes basket-highlight {
+    0% {
+        filter: brightness(1);
+    }
+    50% {
+        filter: brightness(1.2);
+    }
+    100% {
+        filter: brightness(1);
+    }
+}
 .draggable-item {
     position: absolute;
     width: 80px;
@@ -205,20 +205,20 @@ body.show-content > :not(.site-grid) {
     pointer-events: none;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
     transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
-    transform 0.2s ease-out !important; /* 🔥 Додано окремий transition для transform */
+    transform 0.2s ease-out !important;
     animation: drop-and-settle 0.8s ease-out forwards !important;
 }
 @keyframes drop-and-settle {
     0% {
-        transform: scale(1) ;
+        transform: scale(1);
         filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
     }
     50% {
-        transform: scale(0.7) ;
+        transform: scale(0.7);
         filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.25));
     }
     100% {
-        transform: scale(var(--final-scale, 0.5)) ;
+        transform: scale(var(--final-scale, 0.5));
         filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.3));
     }
 }
@@ -235,7 +235,6 @@ body.show-content > :not(.site-grid) {
     }
 }
 
-
 @keyframes basket-shake {
     0%, 100% { transform: translate(-50%, 0); }
     25% { transform: translate(-50%, -2px) rotate(-1deg); }
@@ -246,7 +245,6 @@ body.show-content > :not(.site-grid) {
     animation: basket-highlight 0.4s ease;
 }
 
-/* Прогрес-бар */
 .progress-container {
     position: fixed;
     top: 30px;
@@ -280,7 +278,6 @@ body.show-content > :not(.site-grid) {
     border-radius: 15px;
 }
 
-/* Контейнер з побажаннями */
 .wish-screen {
     position: fixed;
     top: 0;
@@ -288,7 +285,6 @@ body.show-content > :not(.site-grid) {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
-
     z-index: 1000;
     display: flex;
     align-items: center;
@@ -304,13 +300,11 @@ body.show-content > :not(.site-grid) {
 }
 
 .wish-content {
-
     padding: 40px;
     border-radius: 30px;
     max-width: 800px;
     width: 90%;
     text-align: center;
-
     transform: scale(0.8);
     transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -339,21 +333,12 @@ body.show-content > :not(.site-grid) {
     font-size: 60px;
     color: #FFFFFF;
     text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
-    height: 160px; /* фиксированна висота — текст печатається всередині, контейнер не росте */
+    height: 160px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-
-
-
-
-
-
-
-
-/* Завантаження */
 .loading {
     position: fixed;
     top: 50%;
@@ -365,37 +350,6 @@ body.show-content > :not(.site-grid) {
     text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
 }
 
-/* Мобільна адаптація */
-@media (max-width: 768px) {
-    .basket {
-        width: 120px;
-        height: 120px;
-        bottom: 0;
-    }
-
-    .draggable-item {
-        width: 60px;
-        height: 60px;
-    }
-
-    .progress-bar {
-        width: 250px;
-    }
-
-    .special-message {
-        font-size: 36px;
-    }
-
-    .wish-text {
-        font-size: 24px;
-    }
-
-    .wish-content {
-        padding: 30px 20px;
-    }
-}
-
-/* 🎉 КОНФЕТТІ */
 .confetti {
     position: fixed;
     width: 10px;
@@ -416,4 +370,3 @@ body.show-content > :not(.site-grid) {
         opacity: 0;
     }
 }
-
