@@ -458,16 +458,20 @@ function createDraggableItems(container) {
         height: isMobile ? 200 : 350
     };
 
-    // Зона виключення для прогрес-бару (ЗБІЛЬШЕНО для мобілки)
     const progressExcludeZone = {
         x: centerX - (isMobile ? 150 : 200),
         y: 0,
         width: isMobile ? 300 : 400,
-        height: isMobile ? 120 : 150
+        height: isMobile ? 140 : 150 // Збільшено для мобілки
     };
 
-    const edgeMargin = 20;
-    const minDist = 100;
+    const edgeMargin = isMobile ? 0 : 20;
+    const minDist = isMobile ? 20 : 60;
+
+    const verticalBounds = isMobile ? {
+        minY: 120,  // Під прогрес-баром
+        maxY: H - 100  // Над кошиком
+    } : null;
 
     const positions = [];
 
@@ -476,10 +480,22 @@ function createDraggableItems(container) {
 
     const allItems = [];
 
-    limitedItems.forEach(item => {
-        allItems.push({...item, copyIndex: 1});
-        allItems.push({...item, copyIndex: 2});
-    });
+    if (isMobile) {
+        const shuffled = [...limitedItems].sort(() => Math.random() - 0.5);
+        const mobileCount = 16;
+
+        shuffled.slice(0, mobileCount).forEach(item => {
+            allItems.push({...item, copyIndex: 1});
+
+        });
+    } else {
+        limitedItems.forEach(item => {
+            allItems.push({...item, copyIndex: 1});
+            allItems.push({...item, copyIndex: 2});
+        });
+    }
+
+
 
     totalItems = allItems.length;
 
@@ -499,11 +515,11 @@ function createDraggableItems(container) {
         let sizeVariation;
         const sizeRandom = Math.random();
         if (sizeRandom < 0.3) {
-            sizeVariation = isMobile ? 45 : 65;
+            sizeVariation = isMobile ? 50 : 65;
         } else if (sizeRandom < 0.7) {
-            sizeVariation = isMobile ? 55 : 80;
+            sizeVariation = isMobile ? 60 : 80;
         } else {
-            sizeVariation = isMobile ? 65 : 95;
+            sizeVariation = isMobile ? 70 : 95;
         }
 
         itemElement.style.width = sizeVariation + 'px';
@@ -519,9 +535,9 @@ function createDraggableItems(container) {
         const maxAttempts = 2000;
 
         const maxX = W - sizeVariation - edgeMargin;
-        const maxY = H - sizeVariation - edgeMargin;
         const minX = edgeMargin;
-        const minY = edgeMargin;
+        const maxY = verticalBounds ? verticalBounds.maxY - sizeVariation : H - sizeVariation - edgeMargin;
+        const minY = verticalBounds ? verticalBounds.minY : edgeMargin;
 
         function isInExcludeZone(x, y, size) {
             // Перевірка зони кошика
@@ -583,7 +599,7 @@ function createDraggableItems(container) {
         if (!placed) {
             // Аварійний режим з меншою дистанцією
             let emergencyAttempts = 0;
-            const reducedMinDist = minDist * 0.4;
+            const reducedMinDist = minDist * 0.001;
 
             while (!placed && emergencyAttempts < 500) {
                 x = minX + Math.random() * (maxX - minX);
