@@ -395,8 +395,8 @@ body.show-content > :not(.site-grid) {
 @media (max-width: 768px) {
 
     .basket {
-        width: 150px;
-        height: 150px;
+        width: 200px;
+        height: 200px;
         bottom: -25px;
     }
 
