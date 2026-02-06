@@ -472,13 +472,13 @@ function createDraggableItems(container) {
 
     const positions = [];
 
-    const maxUniqueItems = 16;
+    const maxUniqueItems = isMobile ? 1 : 1;
     const limitedItems = items.slice(0, maxUniqueItems);
 
     const allItems = [];
     limitedItems.forEach(item => {
         allItems.push({...item, copyIndex: 1});
-        allItems.push({...item, copyIndex: 2});
+        // allItems.push({...item, copyIndex: 2});
 
 
     });
