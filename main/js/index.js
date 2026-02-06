@@ -415,6 +415,7 @@ function createDraggableItems(container) {
     limitedItems.forEach(item => {
         allItems.push({...item, copyIndex: 1});
         allItems.push({...item, copyIndex: 2});
+
     });
 
     totalItems = allItems.length;
@@ -640,7 +641,7 @@ function endDrag(e) {
 function isOverBasket(x, y) {
     const basket = document.getElementById('basket');
     const rect = basket.getBoundingClientRect();
-    const padding = 50;
+    const padding = 0; // Зменшено з 50 до 30 для вужчої зони
     return x >= rect.left - padding &&
         x <= rect.right + padding &&
         y >= rect.top - padding &&
@@ -857,7 +858,7 @@ async function loadWishes() {
         wishes = data.wishes;
     } catch (error) {
         console.error('Помилка завантаження побажань:', error);
-        wishes = ['Христос Воскрес! Щастиливого Великодня!'];
+        wishes = ['Христос Воскрес! Щасливого Великодня!'];
     }
 }
 
@@ -871,7 +872,7 @@ function createWishScreen() {
 
     const specialMessage = document.createElement('div');
     specialMessage.className = 'special-message';
-    specialMessage.textContent = 'ХРИСТОС ВОСКРЕС!';
+    specialMessage.textContent = 'Христос Воскрес!';
 
     const wishText = document.createElement('div');
     wishText.className = 'wish-text';
