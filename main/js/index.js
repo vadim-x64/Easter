@@ -451,36 +451,34 @@ function createDraggableItems(container) {
     const centerY = H / 2;
     const isMobile = W <= 768;
 
-    // Зона виключення для кошика (внизу по центру)
     const basketExcludeZone = {
-        x: centerX - 200,
-        y: H - 350,
-        width: 400,
-        height: 350
+        x: centerX - (isMobile ? 120 : 200),
+        y: H - (isMobile ? 200 : 350),
+        width: isMobile ? 240 : 400,
+        height: isMobile ? 200 : 350
     };
 
-    // Зона виключення для прогрес-бару (вгорі по центру)
+    // Зона виключення для прогрес-бару (ЗБІЛЬШЕНО для мобілки)
     const progressExcludeZone = {
-        x: centerX - 200,
+        x: centerX - (isMobile ? 150 : 200),
         y: 0,
-        width: 400,
-        height: 150
+        width: isMobile ? 300 : 400,
+        height: isMobile ? 120 : 150
     };
 
-    const edgeMargin = isMobile ? 40 : 20;
-    const minDist = isMobile ? 80 : 100;
+    const edgeMargin = 20;
+    const minDist = 100;
 
     const positions = [];
 
-    const maxUniqueItems = isMobile ? 1 : 1;
+    const maxUniqueItems = 16;
     const limitedItems = items.slice(0, maxUniqueItems);
 
     const allItems = [];
+
     limitedItems.forEach(item => {
         allItems.push({...item, copyIndex: 1});
-        // allItems.push({...item, copyIndex: 2});
-
-
+        allItems.push({...item, copyIndex: 2});
     });
 
     totalItems = allItems.length;
@@ -501,11 +499,11 @@ function createDraggableItems(container) {
         let sizeVariation;
         const sizeRandom = Math.random();
         if (sizeRandom < 0.3) {
-            sizeVariation = isMobile ? 50 : 65;
+            sizeVariation = isMobile ? 45 : 65;
         } else if (sizeRandom < 0.7) {
-            sizeVariation = isMobile ? 65 : 80;
+            sizeVariation = isMobile ? 55 : 80;
         } else {
-            sizeVariation = isMobile ? 75 : 95;
+            sizeVariation = isMobile ? 65 : 95;
         }
 
         itemElement.style.width = sizeVariation + 'px';
@@ -518,7 +516,7 @@ function createDraggableItems(container) {
         let x, y;
         let placed = false;
         let attempts = 0;
-        const maxAttempts = 1000;
+        const maxAttempts = 2000;
 
         const maxX = W - sizeVariation - edgeMargin;
         const maxY = H - sizeVariation - edgeMargin;
@@ -706,7 +704,7 @@ function endDrag(e) {
 function isOverBasket(x, y) {
     const basket = document.getElementById('basket');
     const rect = basket.getBoundingClientRect();
-    const padding = 0; // Зменшено з 50 до 30 для вужчої зони
+    const padding = 0;
     return x >= rect.left - padding &&
         x <= rect.right + padding &&
         y >= rect.top - padding &&
@@ -718,16 +716,19 @@ function checkBasketProximity(x, y) {
     const basketRect = basket.getBoundingClientRect();
     const basketCenterX = basketRect.left + basketRect.width / 2;
     const basketCenterY = basketRect.top + basketRect.height / 2;
+    const isMobile = window.innerWidth <= 768;
 
-    const itemCenterX = x + 40;
-    const itemCenterY = y + 40;
+    const itemCenterX = x + (isMobile ? 25 : 40);
+    const itemCenterY = y + (isMobile ? 25 : 40);
 
     const distance = Math.sqrt(
         Math.pow(itemCenterX - basketCenterX, 2) +
         Math.pow(itemCenterY - basketCenterY, 2)
     );
 
-    if (distance < 180) {
+    const proximityThreshold = isMobile ? 80 : 180; // ЗМЕНШЕНО для мобілки
+
+    if (distance < proximityThreshold) {
         basket.classList.add('lift');
 
         if (itemCenterX < basketCenterX) {
