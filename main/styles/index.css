@@ -270,6 +270,7 @@ body.show-content > :not(.site-grid) {
     transform: translateX(-50%);
     z-index: 20;
     text-align: center;
+    pointer-events: none;
 }
 
 .progress-text {

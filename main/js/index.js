@@ -194,21 +194,80 @@ function playDropSound() {
 
 function playCompleteSound() {
     const ctx = getAudioContext();
-    const notes = [523, 659, 784, 1047];
-    notes.forEach((freq, i) => {
+
+    const bells = [
+        {freq: 523, time: 0, duration: 1.2},
+        {freq: 659, time: 0.4, duration: 1.0},
+        {freq: 784, time: 0.8, duration: 0.8},
+        {freq: 523, time: 1.3, duration: 1.2},
+        {freq: 659, time: 1.7, duration: 1.0},
+        {freq: 784, time: 2.1, duration: 0.8},
+        {freq: 1047, time: 2.8, duration: 1.5}
+    ];
+
+    bells.forEach(bell => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
+
         osc.connect(gain);
         gain.connect(ctx.destination);
+
         osc.type = 'sine';
-        const startTime = ctx.currentTime + i * 0.15;
-        osc.frequency.setValueAtTime(freq, startTime);
-        gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(0.3, startTime + 0.03);
-        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.6);
-        osc.start(startTime);
-        osc.stop(startTime + 0.6);
+        osc.frequency.setValueAtTime(bell.freq, ctx.currentTime + bell.time);
+
+        // ГУЧНІСТЬ ОСНОВНОГО ДЗВОНУ - ТУТ МІНЯЙ ⬇️
+        gain.gain.setValueAtTime(0, ctx.currentTime + bell.time);
+        gain.gain.linearRampToValueAtTime(0.14, ctx.currentTime + bell.time + 0.02); // <-- ЦЕ ГУЧНІСТЬ
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + bell.time + bell.duration);
+
+        osc.start(ctx.currentTime + bell.time);
+        osc.stop(ctx.currentTime + bell.time + bell.duration);
+
+        const shimmer = ctx.createOscillator();
+        const shimmerGain = ctx.createGain();
+
+        shimmer.connect(shimmerGain);
+        shimmerGain.connect(ctx.destination);
+
+        shimmer.type = 'triangle';
+        shimmer.frequency.setValueAtTime(bell.freq * 3, ctx.currentTime + bell.time);
+
+        // ГУЧНІСТЬ ВІДГОМОНУ - ТУТ МІНЯЙ ⬇️
+        shimmerGain.gain.setValueAtTime(0, ctx.currentTime + bell.time);
+        shimmerGain.gain.linearRampToValueAtTime(0.035, ctx.currentTime + bell.time + 0.01); // <-- ЦЕ ГУЧНІСТЬ
+        shimmerGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + bell.time + bell.duration * 0.7);
+
+        shimmer.start(ctx.currentTime + bell.time);
+        shimmer.stop(ctx.currentTime + bell.time + bell.duration);
     });
+
+    setTimeout(() => {
+        const finale = [
+            {freq: 659, delay: 0},
+            {freq: 784, delay: 0.15},
+            {freq: 1047, delay: 0.3},
+            {freq: 1319, delay: 0.45}
+        ];
+
+        finale.forEach(note => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(note.freq, ctx.currentTime + note.delay);
+
+            // ГУЧНІСТЬ ФІНАЛУ - ТУТ МІНЯЙ ⬇️
+            gain.gain.setValueAtTime(0, ctx.currentTime + note.delay);
+            gain.gain.linearRampToValueAtTime(0.126, ctx.currentTime + note.delay + 0.03); // <-- ЦЕ ГУЧНІСТЬ
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + note.delay + 1.5);
+
+            osc.start(ctx.currentTime + note.delay);
+            osc.stop(ctx.currentTime + note.delay + 1.5);
+        });
+    }, 4000);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -233,7 +292,12 @@ function createSiteRevealAnimation() {
     document.documentElement.style.setProperty('--grid-rows', rows);
 
     const totalCells = columns * rows;
-    const colors = ['#FFD700', '#FFA500', '#FF6B6B', '#FF69B4', '#9370DB', '#87CEEB'];
+    const colors = [
+        '#FFD700', '#FFA500', '#FF6B6B', '#FF69B4',
+        '#9370DB', '#87CEEB', '#FF1493', '#00CED1',
+        '#FF8C00', '#7B68EE', '#32CD32', '#FF00FF',
+        '#00FFFF', '#FFEB3B', '#E91E63'
+    ];
 
     for (let i = 0; i < totalCells; i++) {
         const cell = document.createElement('div');
@@ -415,6 +479,7 @@ function createDraggableItems(container) {
     limitedItems.forEach(item => {
         allItems.push({...item, copyIndex: 1});
         allItems.push({...item, copyIndex: 2});
+
 
     });
 
@@ -724,11 +789,12 @@ function createDissolveEffect(x, y, element) {
     const isMobile = window.innerWidth <= 768;
     const particleCount = isMobile ? 15 : 25;
 
-    // Отримуємо колір з елемента (беремо основний колір картинки)
     const colors = [
         '#FFD700', '#FFA500', '#FF6B6B', '#FF69B4',
         '#9370DB', '#87CEEB', '#4CAF50', '#FF9800',
-        '#E91E63', '#00BCD4', '#FFEB3B', '#8BC34A'
+        '#E91E63', '#00BCD4', '#FFEB3B', '#8BC34A',
+        '#FF1493', '#00CED1', '#FF8C00', '#7B68EE',
+        '#32CD32', '#FF00FF', '#00FFFF', '#FF007F'
     ];
 
     for (let i = 0; i < particleCount; i++) {
@@ -818,7 +884,12 @@ function updateBasketImage(img) {
 function createConfetti(x, y) {
     const isMobile = window.innerWidth <= 768;
     const confettiCount = isMobile ? 8 : 15;
-    const colors = ['#FFD700', '#FFA500', '#FF6B6B', '#FF69B4', '#9370DB', '#87CEEB'];
+    const colors = [
+        '#FFD700', '#FFA500', '#FF6B6B', '#FF69B4',
+        '#9370DB', '#87CEEB', '#FF1493', '#00CED1',
+        '#FF8C00', '#7B68EE', '#32CD32', '#FF00FF',
+        '#00FFFF', '#FFFF00', '#FF007F'
+    ];
 
     for (let i = 0; i < confettiCount; i++) {
         const confetti = document.createElement('div');
@@ -947,7 +1018,10 @@ function createCelebration(count = 80) {
 
     const colors = [
         '#FFD700', '#FFA500', '#FF6B6B', '#FF69B4',
-        '#9370DB', '#87CEEB', '#FF4757', '#2ED573', '#ECCC68', '#FF6348'
+        '#9370DB', '#87CEEB', '#FF4757', '#2ED573',
+        '#ECCC68', '#FF6348', '#FF1493', '#00CED1',
+        '#FF8C00', '#7B68EE', '#FF69B4', '#32CD32',
+        '#FF00FF', '#00FFFF', '#FFFF00', '#FF007F'
     ];
     const W = window.innerWidth;
     const H = window.innerHeight;
@@ -994,7 +1068,7 @@ function createCelebration(count = 80) {
             const el = document.createElement('div');
             el.style.cssText = `
             position: fixed;
-            left: 0px;
+            left: -15px;
             top: 0px;
             width: ${w}px;
             height: ${h}px;
