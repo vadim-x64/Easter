@@ -1,8 +1,19 @@
 * {
-    font-family: 'Chewy', 'ChewyFallback', cursive, sans-serif;
+    font-family: 'Marmelad', serif ;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
+
+.loading {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 80px;
+    color: #FF6B6B;
+    z-index: 100;
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
 }
 
 body {
@@ -271,6 +282,8 @@ body.show-content > :not(.site-grid) {
     z-index: 20;
     text-align: center;
     pointer-events: none;
+    width: calc(100% - 40px); /* Додаємо відступи по 20px з кожного боку */
+    max-width: 500px;
 }
 
 .progress-text {
@@ -281,7 +294,7 @@ body.show-content > :not(.site-grid) {
 }
 
 .progress-bar {
-    width: 300px;
+    width: 100%;
     height: 50px;
     background-color: rgba(255, 255, 255, 0.5);
     border-radius: 200px;
@@ -359,16 +372,7 @@ body.show-content > :not(.site-grid) {
     justify-content: center;
 }
 
-.loading {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 32px;
-    color: #FF6B6B;
-    z-index: 100;
-    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
-}
+
 
 .confetti {
     position: fixed;
@@ -392,11 +396,13 @@ body.show-content > :not(.site-grid) {
 }
 
 /* ====================== МОБІЛЬНА АДАПТАЦІЯ ====================== */
-@media (max-width: 768px) {
-
+@media screen and (max-width: 768px) {
+    .loading {
+        font-size: 40px;
+    }
     .basket {
-        width: 200px;
-        height: 200px;
+        width: 250px;
+        height: 250px;
         bottom: -30px;
         left: calc(50% - 20px);
 
@@ -406,13 +412,15 @@ body.show-content > :not(.site-grid) {
         font-size: 28px;
     }
 
-    .progress-bar {
-        width: 250px;
+    .progress-container {
+        width: calc(100% - 30px); /* Трохи менші відступи для мобілок */
+        max-width: none; /* Прибираємо обмеження */
+        top: 20px; /* Можна трохи вище підняти */
     }
 
     .draggable-item {
-        width: 70px !important;   /* було 50px */
-        height: 70px !important;  /* було 50px */
+        width: 75px !important;   /* було 50px */
+        height: 75px !important;  /* було 50px */
     }
 
     .wish-text {
@@ -420,7 +428,7 @@ body.show-content > :not(.site-grid) {
     }
 
     .special-message {
-        font-size: 52px;
+        font-size: 64px;
     }
 
     .wish-content {

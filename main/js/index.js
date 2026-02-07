@@ -889,10 +889,10 @@ function createDissolveEffect(x, y, element) {
 }
 function updateBasketImage(img) {
     let level = 0;
-    if (collectedCount >= 9) level = 3;
-    else if (collectedCount >= 6) level = 2;
-    else if (collectedCount >= 3) level = 1;
-    else if (collectedCount < 3) level = 0;
+    if (collectedCount >= 12) level = 3;
+    else if (collectedCount >= 8) level = 2;
+    else if (collectedCount >= 4) level = 1;
+    else if (collectedCount < 4) level = 0;
 
     img.src = gameConfig.basketSrcs[level];
 }
