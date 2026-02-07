@@ -496,6 +496,7 @@ body.show-content > :not(.site-grid) {
     display: flex;
     align-items: center;
     justify-content: center;
+
 }
 
 
@@ -615,6 +616,7 @@ body.show-content > :not(.site-grid) {
 
     .wish-text {
         font-size: 32px !important;
+        transform: translateY(-50px);
     }
 
     .special-message {
