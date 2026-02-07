@@ -1,5 +1,17 @@
+/******************************************************************************
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  MAIN STYLESHEET - головний файл стилів гри                                  ║
+║                                                                              ║
+║  Містить всі CSS стилі та анімації: від стартової сітки завантаження до      ║
+║  fold-and-drop механіки, water-fill ефектів прогрес-бару, particle-систем    ║
+║  та адаптивного дизайну для всіх пристроїв. Використовує сучасні CSS         ║
+║  властивості (custom properties, animations, transforms) для плавної         ║
+║  та ефектної візуалізації кожного елементу гри.                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+ ******************************************************************************/
+
 * {
-    font-family: 'Marmelad', serif ;
+    font-family: 'Marmelad', serif;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -120,8 +132,8 @@ body.show-content > :not(.site-grid) {
     width: auto;
     height: 100%;
     object-fit: cover;
-    position: relative; /* Add this to enable z-index */
-    z-index: 7; /* Higher than container's 6, so on top */
+    position: relative;
+    z-index: 7;
 }
 
 .basket-item-inside {
@@ -130,23 +142,20 @@ body.show-content > :not(.site-grid) {
     transition: transform 0.3s ease !important;
 }
 
-
-
 .basket-items-container {
     position: absolute;
-    bottom: 35%; /* Adjusted slightly lower to feel more "inside" the basket */
+    bottom: 35%;
     left: 50%;
     transform: translateX(-50%);
-    width: 70%; /* Wider for better spread (was 55%) */
-    height: 40%; /* Taller to allow vertical piling (was 35%) */
+    width: 70%;
+    height: 40%;
     pointer-events: none;
-    z-index: 6; /* Still under the basket img */
+    z-index: 6;
     transform-origin: center bottom;
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    overflow: hidden; /* Optional: clip items if they poke out */
+    overflow: hidden;
 }
 
-/* Гойдання разом з кошиком */
 .basket.lift .basket-items-container {
     transform: translateX(-50%) translateY(-5%);
 }
@@ -178,9 +187,6 @@ body.show-content > :not(.site-grid) {
     }
 }
 
-
-
-
 .basket.tilt-left {
     transform: translate(-50%, -5%) rotate(-10deg);
 }
@@ -188,8 +194,6 @@ body.show-content > :not(.site-grid) {
 .basket.tilt-right {
     transform: translate(-50%, -5%) rotate(10deg);
 }
-
-
 
 @keyframes basket-highlight {
     0% {
@@ -202,6 +206,7 @@ body.show-content > :not(.site-grid) {
         filter: brightness(1);
     }
 }
+
 .draggable-item {
     position: absolute;
     width: 80px;
@@ -241,6 +246,7 @@ body.show-content > :not(.site-grid) {
     transform 0.2s ease-out !important;
     animation: drop-and-settle 0.8s ease-out forwards !important;
 }
+
 @keyframes drop-and-settle {
     0% {
         transform: scale(1);
@@ -269,9 +275,15 @@ body.show-content > :not(.site-grid) {
 }
 
 @keyframes basket-shake {
-    0%, 100% { transform: translate(-50%, 0); }
-    25% { transform: translate(-50%, -2px) rotate(-1deg); }
-    75% { transform: translate(-50%, -2px) rotate(1deg); }
+    0%, 100% {
+        transform: translate(-50%, 0);
+    }
+    25% {
+        transform: translate(-50%, -2px) rotate(-1deg);
+    }
+    75% {
+        transform: translate(-50%, -2px) rotate(1deg);
+    }
 }
 
 .basket:has(+ .draggable-item.collected) {
@@ -286,7 +298,7 @@ body.show-content > :not(.site-grid) {
     z-index: 20;
     text-align: center;
     pointer-events: none;
-    width: calc(100% - 40px); /* Додаємо відступи по 20px з кожного боку */
+    width: calc(100% - 40px);
     max-width: 500px;
 }
 
@@ -407,10 +419,18 @@ body.show-content > :not(.site-grid) {
 }
 
 @keyframes bar-shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px) scale(1.02); }
-    50% { transform: translateX(5px) scale(1.04); }
-    75% { transform: translateX(-3px) scale(1.02); }
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px) scale(1.02);
+    }
+    50% {
+        transform: translateX(5px) scale(1.04);
+    }
+    75% {
+        transform: translateX(-3px) scale(1.02);
+    }
 }
 
 .progress-explosion-particle {
@@ -419,7 +439,6 @@ body.show-content > :not(.site-grid) {
     z-index: 1000;
     border-radius: 50%;
     animation: particle-explode 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-    /*box-shadow: 0 0 15px currentColor;*/
 }
 
 @keyframes particle-explode {
@@ -459,7 +478,6 @@ body.show-content > :not(.site-grid) {
 
 .wish-content {
     padding: 40px;
-
     max-width: 800px;
     width: 90%;
     text-align: center;
@@ -475,7 +493,6 @@ body.show-content > :not(.site-grid) {
     font-size: 80px;
     font-weight: normal;
     color: #ff3e00;
-
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     opacity: 0;
     transform: translateY(-150px);
@@ -496,10 +513,7 @@ body.show-content > :not(.site-grid) {
     display: flex;
     align-items: center;
     justify-content: center;
-
 }
-
-
 
 .confetti {
     position: fixed;
@@ -522,8 +536,6 @@ body.show-content > :not(.site-grid) {
     }
 }
 
-
-
 .reload-button {
     position: fixed;
     bottom: 0;
@@ -532,7 +544,6 @@ body.show-content > :not(.site-grid) {
     background: transparent;
     border-radius: 50%;
     border: none;
-
     cursor: pointer;
     z-index: 1001;
     display: flex;
@@ -549,7 +560,6 @@ body.show-content > :not(.site-grid) {
     animation: fadeInButton 3s ease forwards;
 }
 
-
 @keyframes fadeInButton {
     from {
         opacity: 0;
@@ -559,7 +569,6 @@ body.show-content > :not(.site-grid) {
         pointer-events: auto;
     }
 }
-
 
 .reload-button img {
     width: 120px;
@@ -573,11 +582,6 @@ body.show-content > :not(.site-grid) {
 .reload-button:hover img {
     transform: rotate(180deg) scale(1.1) translateY(-5px);
 }
-
-
-
-
-
 
 @media screen and (max-width: 768px) {
     .reload-button img {
@@ -596,7 +600,6 @@ body.show-content > :not(.site-grid) {
         height: 250px;
         bottom: -30px;
         left: calc(50% - 20px);
-
     }
 
     .progress-text {
@@ -604,14 +607,14 @@ body.show-content > :not(.site-grid) {
     }
 
     .progress-container {
-        width: calc(100% - 30px); /* Трохи менші відступи для мобілок */
-        max-width: none; /* Прибираємо обмеження */
-        top: 20px; /* Можна трохи вище підняти */
+        width: calc(100% - 30px);
+        max-width: none;
+        top: 20px;
     }
 
     .draggable-item {
-        width: 75px !important;   /* було 50px */
-        height: 75px !important;  /* було 50px */
+        width: 75px !important;
+        height: 75px !important;
     }
 
     .wish-text {
