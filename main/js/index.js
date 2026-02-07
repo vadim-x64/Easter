@@ -977,11 +977,180 @@ function createConfetti(x, y) {
 function updateProgress() {
     const progressText = document.getElementById('progress-text');
     const progressFill = document.getElementById('progress-fill');
+    const progressBar = document.querySelector('.progress-bar');
 
     progressText.textContent = `Зібрано ${collectedCount}/${totalItems}`;
 
     const percentage = (collectedCount / totalItems) * 100;
     progressFill.style.width = percentage + '%';
+
+    // Ефект всплеску води
+    progressFill.classList.add('splash');
+    setTimeout(() => progressFill.classList.remove('splash'), 600);
+
+    // Створюємо бульбашки
+    createWaterBubbles(progressFill);
+
+    // Якщо прогрес завершено - вибух!
+    if (collectedCount === totalItems) {
+        setTimeout(() => {
+            progressBar.classList.add('pre-explode');
+            setTimeout(() => {
+                explodeProgressBar();
+            }, 300);
+        }, 500);
+    }
+}
+
+// Створення бульбашок у воді
+function createWaterBubbles(progressFill) {
+    const bubbleCount = Math.random() > 0.5 ? 2 : 3;
+
+    for (let i = 0; i < bubbleCount; i++) {
+        const bubble = document.createElement('div');
+        bubble.className = 'water-bubble';
+
+        const leftPos = Math.random() * 80 + 10;
+        const drift = (Math.random() - 0.5) * 30;
+        const duration = 1 + Math.random() * 1.5;
+        const size = 4 + Math.random() * 6;
+
+        bubble.style.left = leftPos + '%';
+        bubble.style.width = size + 'px';
+        bubble.style.height = size + 'px';
+        bubble.style.setProperty('--bubble-drift', drift + 'px');
+        bubble.style.animationDuration = duration + 's';
+        bubble.style.animationDelay = (Math.random() * 0.3) + 's';
+
+        progressFill.appendChild(bubble);
+
+        setTimeout(() => bubble.remove(), (duration + 0.3) * 1000);
+    }
+}
+
+// Вибух прогрес-бару - розриває саме заповнену частину на частинки
+function explodeProgressBar() {
+    const progressFill = document.getElementById('progress-fill');
+    const progressBar = document.querySelector('.progress-bar');
+    const rect = progressBar.getBoundingClientRect();
+
+    const isMobile = window.innerWidth <= 768;
+
+    // Створюємо копію градієнта для частинок
+    const gradient = window.getComputedStyle(progressFill).background;
+
+    // Розбиваємо прогрес-бар на частинки
+    const particleCount = isMobile ? 60 : 120;
+
+    // Обчислюємо область заповненого прогресу
+    const fillWidth = rect.width; // Весь бар заповнений на 100%
+    const fillHeight = rect.height;
+
+    // Створюємо сітку частинок по всій довжині заповненого бару
+    const cols = isMobile ? 15 : 25;
+    const rows = isMobile ? 3 : 5;
+
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            const particle = document.createElement('div');
+            particle.className = 'progress-explosion-particle';
+
+            // Позиція частинки в межах прогрес-бару
+            const xPos = rect.left + (fillWidth / cols) * col + (Math.random() * (fillWidth / cols));
+            const yPos = rect.top + (fillHeight / rows) * row + (Math.random() * (fillHeight / rows));
+
+            // Розмір частинки
+            const size = 8 + Math.random() * 12;
+
+            // Колір з градієнта - від жовтого до червоного залежно від позиції
+            const colorPosition = col / cols;
+            let color;
+            if (colorPosition < 0.33) {
+                color = '#FFD700';
+            } else if (colorPosition < 0.66) {
+                color = '#FFA500';
+            } else {
+                color = '#FF6B6B';
+            }
+
+            particle.style.cssText = `
+                position: fixed;
+                left: ${xPos}px;
+                top: ${yPos}px;
+                width: ${size}px;
+                height: ${size}px;
+                background: ${color};
+            `;
+
+            // Напрямок вибуху від центру частинки до зовні
+            const centerX = rect.left + fillWidth / 2;
+            const centerY = rect.top + fillHeight / 2;
+
+            const angle = Math.atan2(yPos - centerY, xPos - centerX);
+            const velocity = 150 + Math.random() * 250;
+            const tx = Math.cos(angle) * velocity;
+            const ty = Math.sin(angle) * velocity + (Math.random() - 0.5) * 100; // Додаємо випадковість по вертикалі
+            const rotation = Math.random() * 720 - 360;
+
+            particle.style.setProperty('--tx', tx + 'px');
+            particle.style.setProperty('--ty', ty + 'px');
+            particle.style.setProperty('--rotation', rotation + 'deg');
+
+            document.body.appendChild(particle);
+
+            setTimeout(() => particle.remove(), 1200);
+        }
+    }
+
+    // Ховаємо оригінальний прогрес-бар
+    progressFill.style.transition = 'opacity 0.3s ease';
+    progressFill.style.opacity = '0';
+
+    // Додаткова хвиля дрібних частинок для густини
+    setTimeout(() => {
+        for (let i = 0; i < particleCount / 3; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'progress-explosion-particle';
+
+            const randomX = rect.left + Math.random() * fillWidth;
+            const randomY = rect.top + Math.random() * fillHeight;
+
+            const size = 3 + Math.random() * 6;
+
+            const colorPosition = (randomX - rect.left) / fillWidth;
+            let color;
+            if (colorPosition < 0.33) {
+                color = '#FFEB3B';
+            } else if (colorPosition < 0.66) {
+                color = '#FF8C00';
+            } else {
+                color = '#FF1493';
+            }
+
+            particle.style.cssText = `
+                position: fixed;
+                left: ${randomX}px;
+                top: ${randomY}px;
+                width: ${size}px;
+                height: ${size}px;
+                background: ${color};
+            `;
+
+            const centerX = rect.left + fillWidth / 2;
+            const centerY = rect.top + fillHeight / 2;
+
+            const angle = Math.atan2(randomY - centerY, randomX - centerX);
+            const velocity = 80 + Math.random() * 150;
+            const tx = Math.cos(angle) * velocity;
+            const ty = Math.sin(angle) * velocity;
+
+            particle.style.setProperty('--tx', tx + 'px');
+            particle.style.setProperty('--ty', ty + 'px');
+
+            document.body.appendChild(particle);
+            setTimeout(() => particle.remove(), 1200);
+        }
+    }, 150);
 }
 
 async function loadWishes() {
