@@ -403,7 +403,7 @@ async function initializeGame() {
     await loadItemsFromFolder();
     await loadWishes();
 
-    //loading.remove();
+    loading.remove();
 
     const gameContainer = document.createElement('div');
     gameContainer.id = 'game-container';
