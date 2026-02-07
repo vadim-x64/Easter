@@ -520,7 +520,7 @@ function createDraggableItems(container) {
 
     const positions = [];
 
-    const maxUniqueItems = 1;
+    const maxUniqueItems = 16;
     const limitedItems = items.slice(0, maxUniqueItems);
 
     const allItems = [];
