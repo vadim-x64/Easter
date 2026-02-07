@@ -293,10 +293,9 @@ function createSiteRevealAnimation() {
 
     const totalCells = columns * rows;
     const colors = [
-        '#FFD700', '#FFA500', '#FF6B6B', '#FF69B4',
-        '#9370DB', '#87CEEB', '#FF1493', '#00CED1',
-        '#FF8C00', '#7B68EE', '#32CD32', '#FF00FF',
-        '#00FFFF', '#FFEB3B', '#E91E63'
+        '#FFD700', // Золотисто-жовтий
+        '#FFA500', // Помаранчевий
+        '#FF8C00'
     ];
 
     for (let i = 0; i < totalCells; i++) {

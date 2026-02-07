@@ -92,8 +92,8 @@ body.show-content > :not(.site-grid) {
 .basket {
     position: absolute;
     bottom: -45px;
-    left: 50%;
-    transform: translate(-50%, 0);
+    left: calc(50% - 30px);
+    transform: translateX(-50%);
     width: 300px;
     height: 300px;
     z-index: 10;
@@ -397,7 +397,9 @@ body.show-content > :not(.site-grid) {
     .basket {
         width: 200px;
         height: 200px;
-        bottom: -25px;
+        bottom: -30px;
+        left: calc(50% - 20px);
+
     }
 
     .progress-text {
@@ -409,8 +411,8 @@ body.show-content > :not(.site-grid) {
     }
 
     .draggable-item {
-        width: 50px !important;
-        height: 50px !important;
+        width: 70px !important;   /* було 50px */
+        height: 70px !important;  /* було 50px */
     }
 
     .wish-text {
