@@ -395,8 +395,70 @@ body.show-content > :not(.site-grid) {
     }
 }
 
-/* ====================== МОБІЛЬНА АДАПТАЦІЯ ====================== */
+
+
+.reload-button {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background: transparent;
+    border-radius: 50%;
+    border: none;
+
+    cursor: pointer;
+    z-index: 1001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.reload-button.fade-in {
+    visibility: visible;
+    animation: fadeInButton 3s ease forwards;
+}
+
+
+@keyframes fadeInButton {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
+
+.reload-button img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: contain;
+    pointer-events: none;
+    transition: transform 0.3s ease;
+}
+
+.reload-button:hover img {
+    transform: rotate(180deg) scale(1.1) translateY(-5px);
+}
+
+
+
+
+
+
 @media screen and (max-width: 768px) {
+    .reload-button img {
+        width: 100px;
+        height: 100px;
+        bottom: 20px;
+    }
+
     .loading {
         font-size: 40px;
     }

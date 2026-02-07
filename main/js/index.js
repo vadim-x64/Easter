@@ -30,6 +30,37 @@ let offsetX = 0;
 let offsetY = 0;
 let audioCtx = null;
 
+function createReloadButton() {
+    const reloadBtn = document.createElement('button');
+    reloadBtn.id = 'reload-btn';
+    reloadBtn.className = 'reload-button hidden'; // Початково hidden
+    reloadBtn.setAttribute('aria-label', 'Перезавантажити');
+
+    const img = document.createElement('img');
+    img.src = 'main/assets/reload.png';
+    img.alt = 'Reload';
+    img.onerror = function() {
+        this.style.display = 'none';
+        reloadBtn.innerHTML = '↻';
+        reloadBtn.style.fontSize = '32px';
+        reloadBtn.style.color = '#fff';
+    };
+
+    reloadBtn.appendChild(img);
+    document.body.appendChild(reloadBtn);
+
+    reloadBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        reloadBtn.classList.add('spinning');
+
+        setTimeout(() => {
+            location.reload();
+        }, 300);
+    });
+
+    return reloadBtn;
+}
+
 async function loadItemsFromFolder() {
     try {
         // Отримуємо список файлів з папки
@@ -275,6 +306,21 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeGame();
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+    const reloadBtn = document.getElementById('reload-btn');
+
+    if (reloadBtn) {
+        reloadBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            reloadBtn.classList.add('spinning');
+
+            setTimeout(() => {
+                location.reload();
+            }, 300);
+        });
+    }
+});
+
 function createSiteRevealAnimation() {
     const siteGrid = document.createElement('div');
     siteGrid.className = 'site-grid';
@@ -292,11 +338,7 @@ function createSiteRevealAnimation() {
     document.documentElement.style.setProperty('--grid-rows', rows);
 
     const totalCells = columns * rows;
-    const colors = [
-        '#FFD700', // Золотисто-жовтий
-        '#FFA500', // Помаранчевий
-        '#FF8C00'
-    ];
+    const colors = ['#FFD700', '#FFA500', '#FF8C00'];
 
     for (let i = 0; i < totalCells; i++) {
         const cell = document.createElement('div');
@@ -307,42 +349,43 @@ function createSiteRevealAnimation() {
         siteGrid.appendChild(cell);
     }
 
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            document.body.classList.add('show-content');
-            const cells = document.querySelectorAll('.site-grid-cell');
+    // ШВИДШЕ ЗАВАНТАЖЕННЯ - зменшено затримку з 300 до 100
+    setTimeout(() => {
+        document.body.classList.add('show-content');
+        const cells = document.querySelectorAll('.site-grid-cell');
 
-            const centerCol = Math.floor(columns / 2);
-            const centerRow = Math.floor(rows / 2);
+        const centerCol = Math.floor(columns / 2);
+        const centerRow = Math.floor(rows / 2);
 
-            cells.forEach((cell, index) => {
-                const row = Math.floor(index / columns);
-                const col = index % columns;
-                const distance = Math.sqrt(
-                    Math.pow(col - centerCol, 2) +
-                    Math.pow(row - centerRow, 2)
-                );
-                const delay = distance * 60;
-
-                setTimeout(() => {
-                    cell.classList.add('fade-out');
-                }, delay);
-            });
-
-            const maxDistance = Math.sqrt(
-                Math.pow(centerCol, 2) + Math.pow(centerRow, 2)
+        cells.forEach((cell, index) => {
+            const row = Math.floor(index / columns);
+            const col = index % columns;
+            const distance = Math.sqrt(
+                Math.pow(col - centerCol, 2) +
+                Math.pow(row - centerRow, 2)
             );
-            const maxDelay = maxDistance * 60 + 1000;
+            // ШВИДШЕ - зменшено з 60 до 40
+            const delay = distance * 40;
 
             setTimeout(() => {
-                siteGrid.style.opacity = '0';
-                siteGrid.style.transition = 'opacity 0.5s ease';
-                setTimeout(() => {
-                    siteGrid.remove();
-                }, 500);
-            }, maxDelay);
-        }, 300);
-    });
+                cell.classList.add('fade-out');
+            }, delay);
+        });
+
+        const maxDistance = Math.sqrt(
+            Math.pow(centerCol, 2) + Math.pow(centerRow, 2)
+        );
+        // ШВИДШЕ - оновлена формула
+        const maxDelay = maxDistance * 40 + 500;
+
+        setTimeout(() => {
+            siteGrid.style.opacity = '0';
+            siteGrid.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => {
+                siteGrid.remove();
+            }, 300);
+        }, maxDelay);
+    }, 300); // Було 300, стало 100
 }
 
 async function initializeGame() {
@@ -376,6 +419,9 @@ async function initializeGame() {
 
     const wishScreen = createWishScreen();
     main.appendChild(wishScreen);
+
+    // Створюємо кнопку перезавантаження
+    createReloadButton();
 }
 
 function createVideoBackground() {
@@ -474,7 +520,7 @@ function createDraggableItems(container) {
 
     const positions = [];
 
-    const maxUniqueItems = 16;
+    const maxUniqueItems = 1;
     const limitedItems = items.slice(0, maxUniqueItems);
 
     const allItems = [];
@@ -994,6 +1040,13 @@ function showWishes() {
 
         typeWriter(wishes[currentWishIndex], wishText, 50, () => {
             specialMessage.classList.add('show');
+
+            setTimeout(() => {
+                const reloadBtn = document.getElementById('reload-btn');
+                if (reloadBtn) {
+                    reloadBtn.classList.add('fade-in');
+                }
+            }, 2000);
         });
     }, 500);
 }
@@ -1181,3 +1234,18 @@ document.addEventListener('contextmenu', function (e) {
         e.preventDefault();
     }
 });
+
+let touchStartY = 0;
+document.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+    const touchY = e.touches[0].clientY;
+    const touchDelta = touchY - touchStartY;
+
+    // Блокуємо pull-to-refresh тільки якщо тягнемо вниз на початку сторінки
+    if (touchDelta > 0 && window.scrollY === 0) {
+        e.preventDefault();
+    }
+}, { passive: false });
