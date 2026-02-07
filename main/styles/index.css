@@ -14,6 +14,10 @@
     color: #FF6B6B;
     z-index: 100;
     text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
+    background-color: transparent;
+    backdrop-filter: blur(30px);
+    border-radius: 200px;
+    padding: 10px 50px;
 }
 
 body {
@@ -582,8 +586,10 @@ body.show-content > :not(.site-grid) {
     }
 
     .loading {
-        font-size: 40px;
+        font-size: 32px;
+        padding: 10px 20px;
     }
+
     .basket {
         width: 250px;
         height: 250px;
