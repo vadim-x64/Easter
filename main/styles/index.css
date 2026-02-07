@@ -602,10 +602,6 @@ body.show-content > :not(.site-grid) {
         left: calc(50% - 20px);
     }
 
-    .progress-text {
-        font-size: 32px;
-    }
-
     .progress-container {
         width: calc(100% - 30px);
         max-width: none;
@@ -618,12 +614,12 @@ body.show-content > :not(.site-grid) {
     }
 
     .wish-text {
-        font-size: 32px !important;
+        font-size: 36px !important;
         transform: translateY(-50px);
     }
 
     .special-message {
-        font-size: 64px;
+        font-size: 68px;
     }
 
     .wish-content {
