@@ -9,6 +9,61 @@
  ╚══════════════════════════════════════════════════════════════════════════════╝
  ******************************************************************************/
 
+let backgroundMusic = null;
+let musicRestartTimeout = null;
+let isMusicPausedByWishes = false;
+
+function initBackgroundMusic() {
+    backgroundMusic = new Audio('main/assets/back.mp3');
+    backgroundMusic.volume = 0.5;
+    backgroundMusic.addEventListener('ended', function () {
+        musicRestartTimeout = setTimeout(() => {
+            if (!isMusicPausedByWishes && !document.hidden) {
+                backgroundMusic.currentTime = 0;
+                backgroundMusic.play().catch(err => console.log('Помилка відтворення:', err));
+            }
+        }, 3000);
+    });
+    setTimeout(() => {
+        backgroundMusic.play().catch(err => {
+            console.log('Автозапуск заблоковано браузером:', err);
+            document.addEventListener('click', function startOnClick() {
+                backgroundMusic.play();
+                document.removeEventListener('click', startOnClick);
+            }, {once: true});
+        });
+    }, 1000);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+}
+
+function handleVisibilityChange() {
+    if (!backgroundMusic) return;
+    if (document.hidden) {
+        if (!backgroundMusic.paused) {
+            backgroundMusic.pause();
+        }
+        if (musicRestartTimeout) {
+            clearTimeout(musicRestartTimeout);
+            musicRestartTimeout = null;
+        }
+    } else {
+        if (!isMusicPausedByWishes) {
+            backgroundMusic.play().catch(err => console.log('Помилка відтворення:', err));
+        }
+    }
+}
+
+function pauseBackgroundMusic() {
+    if (backgroundMusic) {
+        backgroundMusic.pause();
+        isMusicPausedByWishes = true;
+        if (musicRestartTimeout) {
+            clearTimeout(musicRestartTimeout);
+            musicRestartTimeout = null;
+        }
+    }
+}
+
 const gameConfig = {
     itemsFolder: 'main/assets/items/',
     itemExtensions: ['.png', '.jpg', '.jpeg', '.svg', '.gif'],
@@ -50,6 +105,7 @@ function createReloadButton() {
     reloadBtn.addEventListener('click', (e) => {
         e.preventDefault();
         reloadBtn.classList.add('spinning');
+        isMusicPausedByWishes = false;
         setTimeout(() => {
             location.reload();
         }, 300);
@@ -332,6 +388,7 @@ async function initializeGame() {
     await loadItemsFromFolder();
     await loadWishes();
     loading.remove();
+    initBackgroundMusic();
     const gameContainer = document.createElement('div');
     gameContainer.id = 'game-container';
     main.appendChild(gameContainer);
@@ -943,6 +1000,7 @@ function createWishScreen() {
 }
 
 function showWishes() {
+    pauseBackgroundMusic();
     const isMobile = window.innerWidth <= 768;
     const celebrationCount = isMobile ? 10 : 20;
     for (let i = 0; i < celebrationCount; i++) {
