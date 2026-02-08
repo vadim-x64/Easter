@@ -411,14 +411,18 @@ async function initializeGame() {
 }
 
 function createPhysicsThread() {
+    const isMobile = window.innerWidth <= 768;
+
     // Налаштування
     const config = {
-        segments: 15,
-        length: 10,
+        // На мобільному менше сегментів (коротша нитка) і менша відстань між ними
+        segments: isMobile ? 10 : 15,
+        length: isMobile ? 5 : 10,
         gravity: 0.5,
         friction: 0.95,
         stiffness: 1,
-        anchorX: window.innerWidth - 80,
+        // На мобільному зліва (50px), на ПК справа (width - 80px)
+        anchorX: isMobile ? 30 : window.innerWidth - 80,
         anchorY: -10
     };
 
@@ -436,7 +440,7 @@ function createPhysicsThread() {
     const knob = document.createElement('div');
     knob.className = 'music-knob';
 
-    // Іконка (беремо твої файли)
+    // Іконка
     const knobIcon = document.createElement('img');
     knobIcon.src = 'main/assets/sound_on.png';
     knobIcon.alt = 'Sound Toggle';
@@ -475,12 +479,8 @@ function createPhysicsThread() {
         gain.connect(ctx.destination);
 
         osc.type = 'sine';
-
-        // Нижча частота (спокійніше) і дуже швидке падіння
         osc.frequency.setValueAtTime(400, ctx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.1);
-
-        // Короткий і чіткий звук
         gain.gain.setValueAtTime(0.3, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
 
@@ -488,7 +488,6 @@ function createPhysicsThread() {
         osc.stop(ctx.currentTime + 0.1);
     }
 
-    // Функція перемикання музики
     function toggleMusic() {
         if (!backgroundMusic) return;
 
@@ -506,13 +505,9 @@ function createPhysicsThread() {
             }
         }
 
-        // Міняємо картинку
         knobIcon.src = isMuted ? 'main/assets/sound_off.png' : 'main/assets/sound_on.png';
-
-        // Граємо згенерований звук
         playSoftClick();
-
-        if (navigator.vibrate) navigator.vibrate(40); // Коротка вібрація
+        if (navigator.vibrate) navigator.vibrate(40);
     }
 
     // --- 4. ГОЛОВНИЙ ЦИКЛ (UPDATE) ---
@@ -525,7 +520,6 @@ function createPhysicsThread() {
                 p.x = mouseX;
                 p.y = mouseY;
 
-                // ЛОГІКА ТРИГЕРА
                 if (i === points.length - 1 && !hasToggled) {
                     const dragDistance = mouseY - startDragY;
                     if (dragDistance > 50) {
@@ -550,11 +544,10 @@ function createPhysicsThread() {
             p.y += config.gravity;
         }
 
-        // Constraints (Зв'язки)
         for (let iter = 0; iter < 5; iter++) {
             for (let i = 0; i < points.length - 1; i++) {
                 let p1 = points[i];
-                let p2 = points[i+1];
+                let p2 = points[i + 1];
                 let dx = p2.x - p1.x;
                 let dy = p2.y - p1.y;
                 let distance = Math.sqrt(dx * dx + dy * dy);
@@ -563,14 +556,17 @@ function createPhysicsThread() {
                 let offsetX = dx * percent;
                 let offsetY = dy * percent;
 
-                if (!p1.pinned) { p1.x -= offsetX; p1.y -= offsetY; }
+                if (!p1.pinned) {
+                    p1.x -= offsetX;
+                    p1.y -= offsetY;
+                }
                 if (!isDraggingThread || (i + 1) !== dragPointIndex) {
-                    p2.x += offsetX; p2.y += offsetY;
+                    p2.x += offsetX;
+                    p2.y += offsetY;
                 }
             }
         }
 
-        // Малювання
         let d = `M ${points[0].x} ${points[0].y}`;
         for (let i = 1; i < points.length - 1; i++) {
             let xc = (points[i].x + points[i + 1].x) / 2;
@@ -581,7 +577,7 @@ function createPhysicsThread() {
         path.setAttribute("d", d);
 
         const endPoint = points[points.length - 1];
-        knob.style.transform = `translate(${endPoint.x - 32}px, ${endPoint.y - 32}px)`;
+        knob.style.transform = `translate(${endPoint.x - 32}px, ${endPoint.y - 32}px)`; // Центрування (-25px якщо розмір 50, але тут з запасом)
 
         requestAnimationFrame(update);
     }
@@ -597,7 +593,7 @@ function createPhysicsThread() {
         for (let i = 1; i < points.length; i++) {
             let dx = points[i].x - x;
             let dy = points[i].y - y;
-            let dist = Math.sqrt(dx*dx + dy*dy);
+            let dist = Math.sqrt(dx * dx + dy * dy);
             if (dist < closestDist) {
                 closestDist = dist;
                 closestIndex = i;
@@ -652,8 +648,10 @@ function createPhysicsThread() {
     }, {passive: false});
     window.addEventListener('touchend', handleEnd);
 
+    // Оновлений resize: міняє точку прив'язки при зміні розміру вікна
     window.addEventListener('resize', () => {
-        config.anchorX = window.innerWidth - 80;
+        const isMobileNow = window.innerWidth <= 768;
+        config.anchorX = isMobileNow ? 50 : window.innerWidth - 80;
         points[0].x = config.anchorX;
         points[0].oldx = config.anchorX;
     });
@@ -718,20 +716,34 @@ function createDraggableItems(container) {
     const W = window.innerWidth;
     const H = window.innerHeight;
     const centerX = W / 2;
-    const centerY = H / 2;
+    // const centerY = H / 2; // Не використовується
     const isMobile = W <= 768;
+
+    // Зона корзини
     const basketExcludeZone = {
         x: centerX - (isMobile ? 120 : 200),
         y: H - (isMobile ? 200 : 350),
         width: isMobile ? 240 : 400,
         height: isMobile ? 200 : 350
     };
+
+    // Зона прогрес-бару
     const progressExcludeZone = {
         x: centerX - (isMobile ? 150 : 200),
         y: 0,
         width: isMobile ? 300 : 400,
         height: isMobile ? 140 : 150
     };
+
+    // НОВА ЗОНА: Для нитки з динаміком
+    const threadExcludeZone = {
+        // Якщо мобілка - блокуємо зліва, якщо ПК - блокуємо справа
+        x: isMobile ? 0 : W - 150,
+        y: 0,
+        width: 150, // Ширина зони навколо нитки
+        height: isMobile ? 150 : 250 // Висота (на ПК нитка довша)
+    };
+
     const edgeMargin = isMobile ? 0 : 20;
     const minDist = isMobile ? 20 : 60;
     const verticalBounds = isMobile ? {
@@ -756,6 +768,7 @@ function createDraggableItems(container) {
         });
     }
     totalItems = allItems.length;
+
     allItems.forEach((item, index) => {
         const itemElement = document.createElement('div');
         itemElement.className = 'draggable-item';
@@ -767,6 +780,7 @@ function createDraggableItems(container) {
             this.src = 'https://cdn-icons-png.flaticon.com/128/4185/4185015.png';
         };
         itemElement.appendChild(img);
+
         let sizeVariation;
         const sizeRandom = Math.random();
         if (sizeRandom < 0.3) {
@@ -781,6 +795,7 @@ function createDraggableItems(container) {
         const randomRotation = (Math.random() * 50 - 25);
         itemElement.style.transform = `rotate(${randomRotation}deg)`;
         itemElement.dataset.baseRotation = randomRotation;
+
         let x, y;
         let placed = false;
         let attempts = 0;
@@ -791,16 +806,25 @@ function createDraggableItems(container) {
         const minY = verticalBounds ? verticalBounds.minY : edgeMargin;
 
         function isInExcludeZone(x, y, size) {
+            // Перевірка корзини
             if (x + size > basketExcludeZone.x &&
                 x < basketExcludeZone.x + basketExcludeZone.width &&
                 y + size > basketExcludeZone.y &&
                 y < basketExcludeZone.y + basketExcludeZone.height) {
                 return true;
             }
+            // Перевірка прогрес-бару
             if (x + size > progressExcludeZone.x &&
                 x < progressExcludeZone.x + progressExcludeZone.width &&
                 y + size > progressExcludeZone.y &&
                 y < progressExcludeZone.y + progressExcludeZone.height) {
+                return true;
+            }
+            // Перевірка нитки (НОВА)
+            if (x + size > threadExcludeZone.x &&
+                x < threadExcludeZone.x + threadExcludeZone.width &&
+                y + size > threadExcludeZone.y &&
+                y < threadExcludeZone.y + threadExcludeZone.height) {
                 return true;
             }
             return false;
@@ -1263,9 +1287,9 @@ function createWishScreen() {
 function showWishes() {
     pauseBackgroundMusic();
     const isMobile = window.innerWidth <= 768;
-    const celebrationCount = isMobile ? 10 : 20;
+    const celebrationCount = isMobile ? 5 : 10;
     for (let i = 0; i < celebrationCount; i++) {
-        setTimeout(() => createCelebration(isMobile ? 40 : 80), i * 600);
+        setTimeout(() => createCelebration(isMobile ? 30 : 60), i * 1000);
     }
     const wishScreen = document.getElementById('wish-screen');
     const wishText = document.getElementById('wish-text');
