@@ -15,7 +15,7 @@ let isMusicPausedByWishes = false;
 
 function initBackgroundMusic() {
     backgroundMusic = new Audio('main/assets/back.mp3');
-    backgroundMusic.volume = 0.5;
+    backgroundMusic.volume = 1;
     backgroundMusic.addEventListener('ended', function () {
         musicRestartTimeout = setTimeout(() => {
             if (!isMusicPausedByWishes && !document.hidden) {
@@ -34,6 +34,17 @@ function initBackgroundMusic() {
         });
     }, 1000);
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    const savedMuted = localStorage.getItem('musicMuted');
+    if (savedMuted === 'true') {
+        backgroundMusic.muted = true;
+        isMuted = true;
+        setTimeout(() => {
+            const knobIcon = document.querySelector('.music-knob img');
+            if (knobIcon) {
+                knobIcon.src = 'main/assets/sound_off.png';
+            }
+        }, 100);
+    }
 }
 
 function handleVisibilityChange() {
@@ -379,14 +390,12 @@ function createSiteRevealAnimation() {
 }
 
 async function initializeGame() {
-
-
     const main = document.getElementById("main");
     const videoBackground = createVideoBackground();
     main.appendChild(videoBackground);
     const loading = document.createElement('div');
     loading.className = 'loading';
-    loading.textContent = 'Завантаження...';
+    loading.textContent = 'Зачекайте...';
     main.appendChild(loading);
     await loadItemsFromFolder();
     await loadWishes();
@@ -403,7 +412,6 @@ async function initializeGame() {
     const wishScreen = createWishScreen();
     main.appendChild(wishScreen);
     createReloadButton();
-
     const thread = document.createElement('div');
     thread.className = 'hanging-thread';
     main.appendChild(thread);
@@ -412,43 +420,29 @@ async function initializeGame() {
 
 function createPhysicsThread() {
     const isMobile = window.innerWidth <= 768;
-
-    // Налаштування
     const config = {
-        // На мобільному менше сегментів (коротша нитка) і менша відстань між ними
         segments: isMobile ? 10 : 15,
         length: isMobile ? 5 : 10,
         gravity: 0.5,
         friction: 0.95,
         stiffness: 1,
-        // На мобільному зліва (50px), на ПК справа (width - 80px)
         anchorX: isMobile ? 30 : window.innerWidth - 80,
         anchorY: -10
     };
-
-    // --- 1. СТВОРЕННЯ ВІЗУАЛУ ---
     const svgNS = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(svgNS, "svg");
     svg.setAttribute("class", "thread-container");
-
     const path = document.createElementNS(svgNS, "path");
     path.setAttribute("class", "thread-path");
     svg.appendChild(path);
     document.body.appendChild(svg);
-
-    // Створюємо кнопку (грузик)
     const knob = document.createElement('div');
     knob.className = 'music-knob';
-
-    // Іконка
     const knobIcon = document.createElement('img');
     knobIcon.src = 'main/assets/sound_on.png';
     knobIcon.alt = 'Sound Toggle';
     knob.appendChild(knobIcon);
-
     document.body.appendChild(knob);
-
-    // --- 2. ФІЗИЧНІ ТОЧКИ ---
     let points = [];
     for (let i = 0; i < config.segments; i++) {
         points.push({
@@ -459,8 +453,6 @@ function createPhysicsThread() {
             pinned: i === 0
         });
     }
-
-    // --- 3. ЛОГІКА ПЕРЕМИКАЧА ---
     let dragPointIndex = null;
     let mouseX = 0;
     let mouseY = 0;
@@ -471,26 +463,21 @@ function createPhysicsThread() {
     function playSoftClick() {
         const ctx = getAudioContext();
         if (!ctx) return;
-
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-
         osc.connect(gain);
         gain.connect(ctx.destination);
-
         osc.type = 'sine';
         osc.frequency.setValueAtTime(400, ctx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.1);
         gain.gain.setValueAtTime(0.3, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + 0.1);
     }
 
     function toggleMusic() {
         if (!backgroundMusic) return;
-
         if (backgroundMusic.paused) {
             backgroundMusic.play().catch(e => console.log(e));
             isMuted = false;
@@ -504,22 +491,19 @@ function createPhysicsThread() {
                 isMuted = true;
             }
         }
-
         knobIcon.src = isMuted ? 'main/assets/sound_off.png' : 'main/assets/sound_on.png';
         playSoftClick();
+        localStorage.setItem('musicMuted', isMuted);
         if (navigator.vibrate) navigator.vibrate(40);
     }
 
-    // --- 4. ГОЛОВНИЙ ЦИКЛ (UPDATE) ---
     function update() {
         for (let i = 0; i < points.length; i++) {
             let p = points[i];
             if (p.pinned) continue;
-
             if (isDraggingThread && i === dragPointIndex) {
                 p.x = mouseX;
                 p.y = mouseY;
-
                 if (i === points.length - 1 && !hasToggled) {
                     const dragDistance = mouseY - startDragY;
                     if (dragDistance > 50) {
@@ -527,23 +511,18 @@ function createPhysicsThread() {
                         hasToggled = true;
                     }
                 }
-
                 p.oldx = p.x;
                 p.oldy = p.y;
                 continue;
             }
-
             let vx = (p.x - p.oldx) * config.friction;
             let vy = (p.y - p.oldy) * config.friction;
-
             p.oldx = p.x;
             p.oldy = p.y;
-
             p.x += vx;
             p.y += vy;
             p.y += config.gravity;
         }
-
         for (let iter = 0; iter < 5; iter++) {
             for (let i = 0; i < points.length - 1; i++) {
                 let p1 = points[i];
@@ -555,7 +534,6 @@ function createPhysicsThread() {
                 let percent = (difference / distance) / 2 * config.stiffness;
                 let offsetX = dx * percent;
                 let offsetY = dy * percent;
-
                 if (!p1.pinned) {
                     p1.x -= offsetX;
                     p1.y -= offsetY;
@@ -566,7 +544,6 @@ function createPhysicsThread() {
                 }
             }
         }
-
         let d = `M ${points[0].x} ${points[0].y}`;
         for (let i = 1; i < points.length - 1; i++) {
             let xc = (points[i].x + points[i + 1].x) / 2;
@@ -575,21 +552,20 @@ function createPhysicsThread() {
         }
         d += ` T ${points[points.length - 1].x} ${points[points.length - 1].y}`;
         path.setAttribute("d", d);
-
         const endPoint = points[points.length - 1];
-        knob.style.transform = `translate(${endPoint.x - 32}px, ${endPoint.y - 32}px)`; // Центрування (-25px якщо розмір 50, але тут з запасом)
-
+        knob.style.transform = `translate(${endPoint.x - 32}px, ${endPoint.y - 32}px)`;
         requestAnimationFrame(update);
     }
 
-    // --- 5. ОБРОБНИКИ ПОДІЙ ---
     function handleStart(x, y, target) {
+        const wishScreen = document.getElementById('wish-screen');
+        if (wishScreen && wishScreen.classList.contains('show')) {
+            return;
+        }
         if (isDragging) return;
-
         let isKnob = target.closest('.music-knob');
         let closestDist = Infinity;
         let closestIndex = -1;
-
         for (let i = 1; i < points.length; i++) {
             let dx = points[i].x - x;
             let dy = points[i].y - y;
@@ -599,12 +575,10 @@ function createPhysicsThread() {
                 closestIndex = i;
             }
         }
-
         if (isKnob) {
             closestIndex = points.length - 1;
             closestDist = 0;
         }
-
         if (closestDist < 40 || isKnob) {
             isDraggingThread = true;
             dragPointIndex = closestIndex;
@@ -612,7 +586,6 @@ function createPhysicsThread() {
             mouseY = y;
             startDragY = y;
             hasToggled = false;
-
             document.body.style.cursor = 'grabbing';
             knob.style.cursor = 'grabbing';
         }
@@ -635,7 +608,6 @@ function createPhysicsThread() {
         }
     });
     window.addEventListener('mouseup', handleEnd);
-
     window.addEventListener('touchstart', (e) => {
         handleStart(e.touches[0].clientX, e.touches[0].clientY, e.target);
     }, {passive: false});
@@ -647,15 +619,12 @@ function createPhysicsThread() {
         }
     }, {passive: false});
     window.addEventListener('touchend', handleEnd);
-
-    // Оновлений resize: міняє точку прив'язки при зміні розміру вікна
     window.addEventListener('resize', () => {
         const isMobileNow = window.innerWidth <= 768;
         config.anchorX = isMobileNow ? 50 : window.innerWidth - 80;
         points[0].x = config.anchorX;
         points[0].oldx = config.anchorX;
     });
-
     update();
 }
 
@@ -688,7 +657,7 @@ function createBasket() {
     img.src = gameConfig.basketSrcs[0];
     img.alt = 'Корзинка';
     img.onerror = function () {
-        this.src = 'https://cdn-icons-png.flaticon.com/128/2913/2913133.png';
+        this.src = 'https://cdn-icons-png.flaticon.com/128/1685/1685513.png';
     };
     basket.appendChild(img);
     return basket;
@@ -716,34 +685,25 @@ function createDraggableItems(container) {
     const W = window.innerWidth;
     const H = window.innerHeight;
     const centerX = W / 2;
-    // const centerY = H / 2; // Не використовується
     const isMobile = W <= 768;
-
-    // Зона корзини
     const basketExcludeZone = {
         x: centerX - (isMobile ? 120 : 200),
         y: H - (isMobile ? 200 : 350),
         width: isMobile ? 240 : 400,
         height: isMobile ? 200 : 350
     };
-
-    // Зона прогрес-бару
     const progressExcludeZone = {
         x: centerX - (isMobile ? 150 : 200),
         y: 0,
         width: isMobile ? 300 : 400,
         height: isMobile ? 140 : 150
     };
-
-    // НОВА ЗОНА: Для нитки з динаміком
     const threadExcludeZone = {
-        // Якщо мобілка - блокуємо зліва, якщо ПК - блокуємо справа
         x: isMobile ? 0 : W - 150,
         y: 0,
-        width: 150, // Ширина зони навколо нитки
-        height: isMobile ? 150 : 250 // Висота (на ПК нитка довша)
+        width: 150,
+        height: isMobile ? 150 : 250
     };
-
     const edgeMargin = isMobile ? 0 : 20;
     const minDist = isMobile ? 20 : 60;
     const verticalBounds = isMobile ? {
@@ -768,7 +728,6 @@ function createDraggableItems(container) {
         });
     }
     totalItems = allItems.length;
-
     allItems.forEach((item, index) => {
         const itemElement = document.createElement('div');
         itemElement.className = 'draggable-item';
@@ -777,10 +736,9 @@ function createDraggableItems(container) {
         img.src = item.src;
         img.alt = item.name;
         img.onerror = function () {
-            this.src = 'https://cdn-icons-png.flaticon.com/128/4185/4185015.png';
+            this.src = 'https://cdn-icons-png.flaticon.com/128/4185/4185066.png';
         };
         itemElement.appendChild(img);
-
         let sizeVariation;
         const sizeRandom = Math.random();
         if (sizeRandom < 0.3) {
@@ -795,7 +753,6 @@ function createDraggableItems(container) {
         const randomRotation = (Math.random() * 50 - 25);
         itemElement.style.transform = `rotate(${randomRotation}deg)`;
         itemElement.dataset.baseRotation = randomRotation;
-
         let x, y;
         let placed = false;
         let attempts = 0;
@@ -806,21 +763,18 @@ function createDraggableItems(container) {
         const minY = verticalBounds ? verticalBounds.minY : edgeMargin;
 
         function isInExcludeZone(x, y, size) {
-            // Перевірка корзини
             if (x + size > basketExcludeZone.x &&
                 x < basketExcludeZone.x + basketExcludeZone.width &&
                 y + size > basketExcludeZone.y &&
                 y < basketExcludeZone.y + basketExcludeZone.height) {
                 return true;
             }
-            // Перевірка прогрес-бару
             if (x + size > progressExcludeZone.x &&
                 x < progressExcludeZone.x + progressExcludeZone.width &&
                 y + size > progressExcludeZone.y &&
                 y < progressExcludeZone.y + progressExcludeZone.height) {
                 return true;
             }
-            // Перевірка нитки (НОВА)
             if (x + size > threadExcludeZone.x &&
                 x < threadExcludeZone.x + threadExcludeZone.width &&
                 y + size > threadExcludeZone.y &&
@@ -913,7 +867,6 @@ function addDragListeners(element) {
 
 function startDrag(e) {
     if (isDraggingThread) return;
-
     e.preventDefault();
     currentDragElement = e.target.closest('.draggable-item');
     if (!currentDragElement) return;
@@ -977,7 +930,7 @@ function checkBasketProximity(x, y) {
         Math.pow(itemCenterX - basketCenterX, 2) +
         Math.pow(itemCenterY - basketCenterY, 2)
     );
-    const proximityThreshold = isMobile ? 80 : 180;
+    const proximityThreshold = isMobile ? 120 : 180;
     if (distance < proximityThreshold) {
         basket.classList.add('lift');
         if (itemCenterX < basketCenterX) {
