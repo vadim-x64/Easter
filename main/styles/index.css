@@ -595,15 +595,14 @@ body.show-content > :not(.site-grid) {
     overflow: visible;
 }
 
-/* Сама нитка (SVG лінія) */
 .thread-path {
     fill: none;
-    stroke: #5D4037; /* Коричневий колір */
-    stroke-width: 3px;
+    stroke: #FF6600; /* Яскравий помаранчевий */
+    stroke-width: 4px; /* Трохи товстіша */
     stroke-linecap: round;
     stroke-linejoin: round;
-    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
-    pointer-events: all; /* Дозволяємо хапати саму лінію */
+    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.5));
+    pointer-events: all;
     cursor: grab;
 }
 
@@ -616,17 +615,16 @@ body.show-content > :not(.site-grid) {
     50% { transform: rotate(-3deg); }
 }
 
-/* Ручка перемикача музики */
 .music-knob {
     position: fixed;
     top: 0;
-    left: 0;
-    width: 44px;
-    height: 44px;
-    background: radial-gradient(circle at 30% 30%, #8D6E63, #5D4037); /* Дерев'яна кулька */
+    left: 10px;
+    width: 50px; /* Збільшено */
+    height: 50px; /* Збільшено */
+    background: transparent;
+    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.5));
     border-radius: 50%;
     z-index: 21;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -641,13 +639,11 @@ body.show-content > :not(.site-grid) {
     transform: scale(0.95);
 }
 
-/* Стилі для твоєї іконки всередині */
 .music-knob img {
-    width: 60%;
-    height: 60%;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
     pointer-events: none;
-    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
 }
 
 @media screen and (max-width: 768px) {

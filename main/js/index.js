@@ -414,7 +414,7 @@ function createPhysicsThread() {
     // Налаштування
     const config = {
         segments: 15,
-        length: 20,
+        length: 10,
         gravity: 0.5,
         friction: 0.95,
         stiffness: 1,
@@ -464,7 +464,6 @@ function createPhysicsThread() {
     let hasToggled = false;
     let isMuted = false;
 
-    // Генерація приємного звуку "Клік"
     function playSoftClick() {
         const ctx = getAudioContext();
         if (!ctx) return;
@@ -475,19 +474,18 @@ function createPhysicsThread() {
         osc.connect(gain);
         gain.connect(ctx.destination);
 
-        // Використовуємо синусоїду (sine) - вона м'яка, без "піску"
         osc.type = 'sine';
 
-        // Швидке падіння тону (ефект удару)
-        osc.frequency.setValueAtTime(800, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.08);
+        // Нижча частота (спокійніше) і дуже швидке падіння
+        osc.frequency.setValueAtTime(400, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.1);
 
-        // Дуже коротка тривалість (швидкий звук)
-        gain.gain.setValueAtTime(0.2, ctx.currentTime); // Не гучно
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+        // Короткий і чіткий звук
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
 
         osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.05);
+        osc.stop(ctx.currentTime + 0.1);
     }
 
     // Функція перемикання музики
@@ -582,9 +580,8 @@ function createPhysicsThread() {
         d += ` T ${points[points.length - 1].x} ${points[points.length - 1].y}`;
         path.setAttribute("d", d);
 
-        // Прив'язка кнопки
         const endPoint = points[points.length - 1];
-        knob.style.transform = `translate(${endPoint.x - 22}px, ${endPoint.y - 22}px)`;
+        knob.style.transform = `translate(${endPoint.x - 32}px, ${endPoint.y - 32}px)`;
 
         requestAnimationFrame(update);
     }
