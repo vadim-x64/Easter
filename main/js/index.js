@@ -415,13 +415,14 @@ function createPhysicsThread() {
     const config = {
         segments: 15,
         length: 20,
-        gravity: 0.4,
-        friction: 0.96,
+        gravity: 0.5,
+        friction: 0.95,
         stiffness: 1,
         anchorX: window.innerWidth - 80,
         anchorY: -10
     };
 
+    // --- 1. СТВОРЕННЯ ВІЗУАЛУ ---
     const svgNS = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(svgNS, "svg");
     svg.setAttribute("class", "thread-container");
@@ -431,25 +432,92 @@ function createPhysicsThread() {
     svg.appendChild(path);
     document.body.appendChild(svg);
 
-    // --- АНІМАЦІЯ ПОЯВИ ---
+    // Створюємо кнопку (грузик)
+    const knob = document.createElement('div');
+    knob.className = 'music-knob';
+
+    // Іконка (беремо твої файли)
+    const knobIcon = document.createElement('img');
+    knobIcon.src = 'main/assets/sound_on.png';
+    knobIcon.alt = 'Sound Toggle';
+    knob.appendChild(knobIcon);
+
+    document.body.appendChild(knob);
+
+    // --- 2. ФІЗИЧНІ ТОЧКИ ---
     let points = [];
     for (let i = 0; i < config.segments; i++) {
         points.push({
             x: config.anchorX,
-            // Точки стартують вище екрану (зібрані в купу)
             y: config.anchorY - (i * 5),
-            // oldx зміщений вліво => це дасть поштовх вправо (гойданя)
-            oldx: config.anchorX - (i * 3),
-            // oldy ще вище => це дасть швидкість падіння вниз
+            oldx: config.anchorX - (i * 4),
             oldy: config.anchorY - (i * 5) - 15,
             pinned: i === 0
         });
     }
 
+    // --- 3. ЛОГІКА ПЕРЕМИКАЧА ---
     let dragPointIndex = null;
     let mouseX = 0;
     let mouseY = 0;
+    let startDragY = 0;
+    let hasToggled = false;
+    let isMuted = false;
 
+    // Генерація приємного звуку "Клік"
+    function playSoftClick() {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        // Використовуємо синусоїду (sine) - вона м'яка, без "піску"
+        osc.type = 'sine';
+
+        // Швидке падіння тону (ефект удару)
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.08);
+
+        // Дуже коротка тривалість (швидкий звук)
+        gain.gain.setValueAtTime(0.2, ctx.currentTime); // Не гучно
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.05);
+    }
+
+    // Функція перемикання музики
+    function toggleMusic() {
+        if (!backgroundMusic) return;
+
+        if (backgroundMusic.paused) {
+            backgroundMusic.play().catch(e => console.log(e));
+            isMuted = false;
+        } else {
+            if (backgroundMusic.muted || backgroundMusic.volume === 0) {
+                backgroundMusic.muted = false;
+                backgroundMusic.volume = 0.5;
+                isMuted = false;
+            } else {
+                backgroundMusic.muted = true;
+                isMuted = true;
+            }
+        }
+
+        // Міняємо картинку
+        knobIcon.src = isMuted ? 'main/assets/sound_off.png' : 'main/assets/sound_on.png';
+
+        // Граємо згенерований звук
+        playSoftClick();
+
+        if (navigator.vibrate) navigator.vibrate(40); // Коротка вібрація
+    }
+
+    // --- 4. ГОЛОВНИЙ ЦИКЛ (UPDATE) ---
     function update() {
         for (let i = 0; i < points.length; i++) {
             let p = points[i];
@@ -458,6 +526,16 @@ function createPhysicsThread() {
             if (isDraggingThread && i === dragPointIndex) {
                 p.x = mouseX;
                 p.y = mouseY;
+
+                // ЛОГІКА ТРИГЕРА
+                if (i === points.length - 1 && !hasToggled) {
+                    const dragDistance = mouseY - startDragY;
+                    if (dragDistance > 50) {
+                        toggleMusic();
+                        hasToggled = true;
+                    }
+                }
+
                 p.oldx = p.x;
                 p.oldy = p.y;
                 continue;
@@ -474,31 +552,27 @@ function createPhysicsThread() {
             p.y += config.gravity;
         }
 
+        // Constraints (Зв'язки)
         for (let iter = 0; iter < 5; iter++) {
             for (let i = 0; i < points.length - 1; i++) {
                 let p1 = points[i];
-                let p2 = points[i + 1];
-
+                let p2 = points[i+1];
                 let dx = p2.x - p1.x;
                 let dy = p2.y - p1.y;
                 let distance = Math.sqrt(dx * dx + dy * dy);
                 let difference = config.length - distance;
                 let percent = (difference / distance) / 2 * config.stiffness;
-
                 let offsetX = dx * percent;
                 let offsetY = dy * percent;
 
-                if (!p1.pinned) {
-                    p1.x -= offsetX;
-                    p1.y -= offsetY;
-                }
+                if (!p1.pinned) { p1.x -= offsetX; p1.y -= offsetY; }
                 if (!isDraggingThread || (i + 1) !== dragPointIndex) {
-                    p2.x += offsetX;
-                    p2.y += offsetY;
+                    p2.x += offsetX; p2.y += offsetY;
                 }
             }
         }
 
+        // Малювання
         let d = `M ${points[0].x} ${points[0].y}`;
         for (let i = 1; i < points.length - 1; i++) {
             let xc = (points[i].x + points[i + 1].x) / 2;
@@ -508,34 +582,46 @@ function createPhysicsThread() {
         d += ` T ${points[points.length - 1].x} ${points[points.length - 1].y}`;
         path.setAttribute("d", d);
 
+        // Прив'язка кнопки
+        const endPoint = points[points.length - 1];
+        knob.style.transform = `translate(${endPoint.x - 22}px, ${endPoint.y - 22}px)`;
+
         requestAnimationFrame(update);
     }
 
-    function handleStart(x, y) {
-        // --- ПЕРЕВІРКА НА КОНФЛІКТ ---
-        if (isDragging) return; // Якщо тягнемо предмет — нитку не чіпаємо
+    // --- 5. ОБРОБНИКИ ПОДІЙ ---
+    function handleStart(x, y, target) {
+        if (isDragging) return;
 
+        let isKnob = target.closest('.music-knob');
         let closestDist = Infinity;
         let closestIndex = -1;
 
         for (let i = 1; i < points.length; i++) {
             let dx = points[i].x - x;
             let dy = points[i].y - y;
-            let dist = Math.sqrt(dx * dx + dy * dy);
+            let dist = Math.sqrt(dx*dx + dy*dy);
             if (dist < closestDist) {
                 closestDist = dist;
                 closestIndex = i;
             }
         }
 
-        if (closestDist < 40) {
+        if (isKnob) {
+            closestIndex = points.length - 1;
+            closestDist = 0;
+        }
+
+        if (closestDist < 40 || isKnob) {
             isDraggingThread = true;
             dragPointIndex = closestIndex;
             mouseX = x;
             mouseY = y;
+            startDragY = y;
+            hasToggled = false;
 
             document.body.style.cursor = 'grabbing';
-            path.style.cursor = 'grabbing';
+            knob.style.cursor = 'grabbing';
         }
     }
 
@@ -543,13 +629,12 @@ function createPhysicsThread() {
         if (isDraggingThread) {
             isDraggingThread = false;
             dragPointIndex = null;
-            // --- СКИДАННЯ КУРСОРА ---
             document.body.style.cursor = '';
-            path.style.cursor = 'grab';
+            knob.style.cursor = 'grab';
         }
     }
 
-    window.addEventListener('mousedown', (e) => handleStart(e.clientX, e.clientY));
+    window.addEventListener('mousedown', (e) => handleStart(e.clientX, e.clientY, e.target));
     window.addEventListener('mousemove', (e) => {
         if (isDraggingThread) {
             mouseX = e.clientX;
@@ -559,7 +644,7 @@ function createPhysicsThread() {
     window.addEventListener('mouseup', handleEnd);
 
     window.addEventListener('touchstart', (e) => {
-        handleStart(e.touches[0].clientX, e.touches[0].clientY);
+        handleStart(e.touches[0].clientX, e.touches[0].clientY, e.target);
     }, {passive: false});
     window.addEventListener('touchmove', (e) => {
         if (isDraggingThread) {

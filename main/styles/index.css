@@ -616,6 +616,40 @@ body.show-content > :not(.site-grid) {
     50% { transform: rotate(-3deg); }
 }
 
+/* Ручка перемикача музики */
+.music-knob {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 44px;
+    height: 44px;
+    background: radial-gradient(circle at 30% 30%, #8D6E63, #5D4037); /* Дерев'яна кулька */
+    border-radius: 50%;
+    z-index: 21;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    pointer-events: auto;
+    transition: transform 0.1s linear;
+    user-select: none;
+}
+
+.music-knob:active {
+    cursor: grabbing;
+    transform: scale(0.95);
+}
+
+/* Стилі для твоєї іконки всередині */
+.music-knob img {
+    width: 60%;
+    height: 60%;
+    object-fit: contain;
+    pointer-events: none;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+}
+
 @media screen and (max-width: 768px) {
     .reload-button img {
         width: 100px;
