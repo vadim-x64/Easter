@@ -583,6 +583,39 @@ body.show-content > :not(.site-grid) {
     transform: rotate(180deg) scale(1.1) translateY(-5px);
 }
 
+/* Контейнер для фізичної нитки */
+.thread-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Щоб не блокувати кліки по грі */
+    z-index: 20; /* Вище за гру, щоб було видно */
+    overflow: visible;
+}
+
+/* Сама нитка (SVG лінія) */
+.thread-path {
+    fill: none;
+    stroke: #5D4037; /* Коричневий колір */
+    stroke-width: 3px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
+    pointer-events: all; /* Дозволяємо хапати саму лінію */
+    cursor: grab;
+}
+
+.thread-path:active {
+    cursor: grabbing;
+}
+
+@keyframes thread-swing {
+    0%, 100% { transform: rotate(1deg); }
+    50% { transform: rotate(-3deg); }
+}
+
 @media screen and (max-width: 768px) {
     .reload-button img {
         width: 100px;

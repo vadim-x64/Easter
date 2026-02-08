@@ -81,6 +81,7 @@ let collectedCount = 0;
 let totalItems = 0;
 let items = []; // Масив іконок з папки
 let isDragging = false;
+let isDraggingThread = false;
 let currentDragElement = null;
 let offsetX = 0;
 let offsetY = 0;
@@ -378,6 +379,8 @@ function createSiteRevealAnimation() {
 }
 
 async function initializeGame() {
+
+
     const main = document.getElementById("main");
     const videoBackground = createVideoBackground();
     main.appendChild(videoBackground);
@@ -400,6 +403,180 @@ async function initializeGame() {
     const wishScreen = createWishScreen();
     main.appendChild(wishScreen);
     createReloadButton();
+
+    const thread = document.createElement('div');
+    thread.className = 'hanging-thread';
+    main.appendChild(thread);
+    createPhysicsThread();
+}
+
+function createPhysicsThread() {
+    // Налаштування
+    const config = {
+        segments: 15,
+        length: 20,
+        gravity: 0.4,
+        friction: 0.96,
+        stiffness: 1,
+        anchorX: window.innerWidth - 80,
+        anchorY: -10
+    };
+
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("class", "thread-container");
+
+    const path = document.createElementNS(svgNS, "path");
+    path.setAttribute("class", "thread-path");
+    svg.appendChild(path);
+    document.body.appendChild(svg);
+
+    // --- АНІМАЦІЯ ПОЯВИ ---
+    let points = [];
+    for (let i = 0; i < config.segments; i++) {
+        points.push({
+            x: config.anchorX,
+            // Точки стартують вище екрану (зібрані в купу)
+            y: config.anchorY - (i * 5),
+            // oldx зміщений вліво => це дасть поштовх вправо (гойданя)
+            oldx: config.anchorX - (i * 3),
+            // oldy ще вище => це дасть швидкість падіння вниз
+            oldy: config.anchorY - (i * 5) - 15,
+            pinned: i === 0
+        });
+    }
+
+    let dragPointIndex = null;
+    let mouseX = 0;
+    let mouseY = 0;
+
+    function update() {
+        for (let i = 0; i < points.length; i++) {
+            let p = points[i];
+            if (p.pinned) continue;
+
+            if (isDraggingThread && i === dragPointIndex) {
+                p.x = mouseX;
+                p.y = mouseY;
+                p.oldx = p.x;
+                p.oldy = p.y;
+                continue;
+            }
+
+            let vx = (p.x - p.oldx) * config.friction;
+            let vy = (p.y - p.oldy) * config.friction;
+
+            p.oldx = p.x;
+            p.oldy = p.y;
+
+            p.x += vx;
+            p.y += vy;
+            p.y += config.gravity;
+        }
+
+        for (let iter = 0; iter < 5; iter++) {
+            for (let i = 0; i < points.length - 1; i++) {
+                let p1 = points[i];
+                let p2 = points[i + 1];
+
+                let dx = p2.x - p1.x;
+                let dy = p2.y - p1.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                let difference = config.length - distance;
+                let percent = (difference / distance) / 2 * config.stiffness;
+
+                let offsetX = dx * percent;
+                let offsetY = dy * percent;
+
+                if (!p1.pinned) {
+                    p1.x -= offsetX;
+                    p1.y -= offsetY;
+                }
+                if (!isDraggingThread || (i + 1) !== dragPointIndex) {
+                    p2.x += offsetX;
+                    p2.y += offsetY;
+                }
+            }
+        }
+
+        let d = `M ${points[0].x} ${points[0].y}`;
+        for (let i = 1; i < points.length - 1; i++) {
+            let xc = (points[i].x + points[i + 1].x) / 2;
+            let yc = (points[i].y + points[i + 1].y) / 2;
+            d += ` Q ${points[i].x} ${points[i].y}, ${xc} ${yc}`;
+        }
+        d += ` T ${points[points.length - 1].x} ${points[points.length - 1].y}`;
+        path.setAttribute("d", d);
+
+        requestAnimationFrame(update);
+    }
+
+    function handleStart(x, y) {
+        // --- ПЕРЕВІРКА НА КОНФЛІКТ ---
+        if (isDragging) return; // Якщо тягнемо предмет — нитку не чіпаємо
+
+        let closestDist = Infinity;
+        let closestIndex = -1;
+
+        for (let i = 1; i < points.length; i++) {
+            let dx = points[i].x - x;
+            let dy = points[i].y - y;
+            let dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < closestDist) {
+                closestDist = dist;
+                closestIndex = i;
+            }
+        }
+
+        if (closestDist < 40) {
+            isDraggingThread = true;
+            dragPointIndex = closestIndex;
+            mouseX = x;
+            mouseY = y;
+
+            document.body.style.cursor = 'grabbing';
+            path.style.cursor = 'grabbing';
+        }
+    }
+
+    function handleEnd() {
+        if (isDraggingThread) {
+            isDraggingThread = false;
+            dragPointIndex = null;
+            // --- СКИДАННЯ КУРСОРА ---
+            document.body.style.cursor = '';
+            path.style.cursor = 'grab';
+        }
+    }
+
+    window.addEventListener('mousedown', (e) => handleStart(e.clientX, e.clientY));
+    window.addEventListener('mousemove', (e) => {
+        if (isDraggingThread) {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        }
+    });
+    window.addEventListener('mouseup', handleEnd);
+
+    window.addEventListener('touchstart', (e) => {
+        handleStart(e.touches[0].clientX, e.touches[0].clientY);
+    }, {passive: false});
+    window.addEventListener('touchmove', (e) => {
+        if (isDraggingThread) {
+            e.preventDefault();
+            mouseX = e.touches[0].clientX;
+            mouseY = e.touches[0].clientY;
+        }
+    }, {passive: false});
+    window.addEventListener('touchend', handleEnd);
+
+    window.addEventListener('resize', () => {
+        config.anchorX = window.innerWidth - 80;
+        points[0].x = config.anchorX;
+        points[0].oldx = config.anchorX;
+    });
+
+    update();
 }
 
 function createVideoBackground() {
@@ -629,6 +806,8 @@ function addDragListeners(element) {
 }
 
 function startDrag(e) {
+    if (isDraggingThread) return;
+
     e.preventDefault();
     currentDragElement = e.target.closest('.draggable-item');
     if (!currentDragElement) return;
