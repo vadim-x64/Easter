@@ -484,7 +484,7 @@ function createPhysicsThread() {
         } else {
             if (backgroundMusic.muted || backgroundMusic.volume === 0) {
                 backgroundMusic.muted = false;
-                backgroundMusic.volume = 0.5;
+                backgroundMusic.volume = 1;
                 isMuted = false;
             } else {
                 backgroundMusic.muted = true;
