@@ -14,7 +14,7 @@ let musicRestartTimeout = null;
 let isMusicPausedByWishes = false;
 
 function initBackgroundMusic() {
-    backgroundMusic = new Audio('main/assets/back.mp3');
+    backgroundMusic = new Audio('main/assets/back.m4a');
     backgroundMusic.volume = 1;
     backgroundMusic.addEventListener('ended', function () {
         musicRestartTimeout = setTimeout(() => {
