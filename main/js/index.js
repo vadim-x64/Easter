@@ -930,7 +930,7 @@ function checkBasketProximity(x, y) {
         Math.pow(itemCenterX - basketCenterX, 2) +
         Math.pow(itemCenterY - basketCenterY, 2)
     );
-    const proximityThreshold = isMobile ? 120 : 180;
+    const proximityThreshold = isMobile ? 120 : 160;
     if (distance < proximityThreshold) {
         basket.classList.add('lift');
         if (itemCenterX < basketCenterX) {
