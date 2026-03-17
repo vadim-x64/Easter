@@ -349,7 +349,7 @@ function createSiteRevealAnimation() {
     document.documentElement.style.setProperty('--grid-columns', columns);
     document.documentElement.style.setProperty('--grid-rows', rows);
     const totalCells = columns * rows;
-    const colors = ['#FFD700', '#FFA500', '#FF8C00'];
+    const colors = ['#4FC3F7', '#29B6F6', '#0288D1'];
     for (let i = 0; i < totalCells; i++) {
         const cell = document.createElement('div');
         cell.className = 'site-grid-cell';
@@ -504,13 +504,6 @@ function createPhysicsThread() {
             if (isDraggingThread && i === dragPointIndex) {
                 p.x = mouseX;
                 p.y = mouseY;
-                if (i === points.length - 1 && !hasToggled) {
-                    const dragDistance = mouseY - startDragY;
-                    if (dragDistance > 50) {
-                        toggleMusic();
-                        hasToggled = true;
-                    }
-                }
                 p.oldx = p.x;
                 p.oldy = p.y;
                 continue;
@@ -593,6 +586,13 @@ function createPhysicsThread() {
 
     function handleEnd() {
         if (isDraggingThread) {
+            if (dragPointIndex === points.length - 1 && !hasToggled) {
+                const dragDistance = mouseY - startDragY;
+                if (dragDistance > 50) {
+                    toggleMusic();
+                    hasToggled = true;
+                }
+            }
             isDraggingThread = false;
             dragPointIndex = null;
             document.body.style.cursor = '';
@@ -638,7 +638,8 @@ function createVideoBackground() {
     video.playsInline = true;
     video.preload = "auto";
     const source = document.createElement("source");
-    source.src = "main/assets/easter.mp4";
+    const isMobileDevice = window.innerWidth <= 768;
+    source.src = isMobileDevice ? "main/assets/easter_phone.mp4" : "main/assets/easter_main.mp4";
     source.type = "video/mp4";
     video.appendChild(source);
     videoBackground.appendChild(video);
