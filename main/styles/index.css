@@ -580,7 +580,7 @@ body.show-content > :not(.site-grid) {
 }
 
 .reload-button:hover img {
-    transform: rotate(180deg) scale(1.1) translateY(-5px);
+    transform: rotate(180deg);
 }
 
 .thread-container {
