@@ -15,7 +15,7 @@ let isMusicPausedByWishes = false;
 
 function initBackgroundMusic() {
     backgroundMusic = new Audio('main/assets/easter.m4a');
-    backgroundMusic.volume = 1;
+    backgroundMusic.volume = 0.5;
     backgroundMusic.addEventListener('ended', function () {
         musicRestartTimeout = setTimeout(() => {
             if (!isMusicPausedByWishes && !document.hidden) {
@@ -484,7 +484,7 @@ function createPhysicsThread() {
         } else {
             if (backgroundMusic.muted || backgroundMusic.volume === 0) {
                 backgroundMusic.muted = false;
-                backgroundMusic.volume = 1;
+                backgroundMusic.volume = 0.5;
                 isMuted = false;
             } else {
                 backgroundMusic.muted = true;
