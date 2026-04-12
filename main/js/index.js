@@ -24,15 +24,27 @@ function initBackgroundMusic() {
             }
         }, 3000);
     });
-    setTimeout(() => {
+    function tryPlayWithFallback() {
         backgroundMusic.play().catch(err => {
             console.log('Автозапуск заблоковано браузером:', err);
-            document.addEventListener('click', function startOnClick() {
-                backgroundMusic.play();
-                document.removeEventListener('click', startOnClick);
-            }, {once: true});
+            const startOnInteraction = () => {
+                backgroundMusic.play().catch(e => console.log(e));
+                document.removeEventListener('click', startOnInteraction);
+                document.removeEventListener('touchstart', startOnInteraction);
+                document.removeEventListener('keydown', startOnInteraction);
+            };
+            document.addEventListener('click', startOnInteraction);
+            document.addEventListener('touchstart', startOnInteraction);
+            document.addEventListener('keydown', startOnInteraction);
         });
-    }, 1000);
+    }
+    const wasReloaded = sessionStorage.getItem('gameReloaded');
+    if (wasReloaded) {
+        sessionStorage.removeItem('gameReloaded');
+        tryPlayWithFallback();
+    } else {
+        setTimeout(tryPlayWithFallback, 500);
+    }
     document.addEventListener('visibilitychange', handleVisibilityChange);
     const savedMuted = localStorage.getItem('musicMuted');
     if (savedMuted === 'true') {
@@ -90,7 +102,7 @@ let wishes = [];
 let currentWishIndex = 0;
 let collectedCount = 0;
 let totalItems = 0;
-let items = []; // Масив іконок з папки
+let items = [];
 let isDragging = false;
 let isDraggingThread = false;
 let currentDragElement = null;
@@ -118,6 +130,7 @@ function createReloadButton() {
         e.preventDefault();
         reloadBtn.classList.add('spinning');
         isMusicPausedByWishes = false;
+        sessionStorage.setItem('gameReloaded', '1');
         setTimeout(() => {
             location.reload();
         }, 300);
